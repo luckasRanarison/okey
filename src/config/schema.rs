@@ -1,5 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, hash::Hash, str::FromStr};
 
+use evdev::{EventType, InputEvent};
 use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Deserialize)]
