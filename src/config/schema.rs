@@ -27,6 +27,7 @@ pub struct ComboDefinition {
 
 #[derive(Debug, Deserialize)]
 pub struct TapDanceConfig {
+    pub timeout: u16,
     pub tap: KeyAction,
     pub hold: KeyAction,
 }

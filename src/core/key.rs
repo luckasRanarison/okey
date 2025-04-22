@@ -1,11 +1,24 @@
+use std::time::Instant;
+
 use evdev::{EventType, InputEvent};
 
-use crate::config::schema::KeyCode;
+use crate::config::schema::{KeyAction, KeyCode};
+
+#[derive(Debug)]
+pub struct KeyState {
+    pub code: u16,
+    pub timeout: u16,
+    pub timestamp: Instant,
+    pub released: bool,
+    pub tap: KeyAction,
+    pub hold: KeyAction,
+}
 
 #[derive(Debug)]
 pub enum KeyResult {
     KeyCode(u16),
     KeyMacro(KeyMacro),
+    KeyPressed(KeyState),
     Layer,
     None,
 }

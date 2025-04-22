@@ -14,12 +14,7 @@ pub struct EventHandler {
 
 impl EventHandler {
     pub fn new(device: Device, config: KeyboardConfig) -> Result<Self> {
-        let virtual_device = VirtualDevice::builder()?
-            .name("okey virtual keyboard")
-            .with_keys(device.supported_keys().unwrap_or_default())?
-            .build()?;
-
-        let key_manager = KeyManager::new(config, virtual_device);
+        let key_manager = KeyManager::new(config);
 
         Ok(Self {
             device,
@@ -33,22 +28,27 @@ impl EventHandler {
 
         let epoll = Epoll::new(EpollCreateFlags::EPOLL_CLOEXEC)?;
         let event = EpollEvent::new(EpollFlags::EPOLLIN, 0);
-        let epoll_timeout = 10_u16; // milliseconds
+        let epoll_timeout = 1_u16; // milliseconds
 
         let mut epoll_buffer = [EpollEvent::empty(); 1];
 
         epoll.add(&self.device, event)?;
+
+        let mut virtual_device = VirtualDevice::builder()?
+            .name("okey virtual keyboard")
+            .with_keys(self.device.supported_keys().unwrap_or_default())?
+            .build()?;
 
         loop {
             epoll.wait(&mut epoll_buffer, epoll_timeout)?;
 
             if let Ok(events) = self.device.fetch_events() {
                 for event in events {
-                    self.key_manager.process_event(event)?;
+                    self.key_manager.process_event(event, &mut virtual_device)?;
                 }
             }
 
-            self.key_manager.next()?;
+            self.key_manager.next(&mut virtual_device)?;
         }
     }
 }
