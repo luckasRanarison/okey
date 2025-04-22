@@ -13,11 +13,11 @@ pub struct KeyboardConfig {
     pub keys: Option<HashMap<KeyCode, KeyAction>>,
     pub combos: Option<ComboConfig>,
     pub tap_dances: Option<HashMap<KeyCode, TapDanceConfig>>,
-    pub layers: Option<HashMap<String, LayerConfig>>,
+    pub layers: Option<LayerConfig>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ComboConfig(Vec<ComboDefinition>);
+pub struct ComboConfig(pub Vec<ComboDefinition>);
 
 #[derive(Debug, Deserialize)]
 pub struct ComboDefinition {
@@ -32,7 +32,10 @@ pub struct TapDanceConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct LayerConfig {
+pub struct LayerConfig(pub HashMap<String, LayerDefinition>);
+
+#[derive(Debug, Deserialize)]
+pub struct LayerDefinition {
     pub modifier: LayerModiferConfig,
     pub keys: HashMap<KeyCode, KeyAction>,
 }
