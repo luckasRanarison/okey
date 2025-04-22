@@ -76,25 +76,23 @@ pub enum LayerModifierKind {
     Oneshoot,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(untagged)]
 pub enum KeyAction {
     KeyCode(KeyCode),
     Macro(Vec<KeyCode>),
 }
 
-#[derive(Debug, Hash, PartialEq, Eq)]
-pub enum KeyCode {
-    Evdev(evdev::KeyCode),
-    Custom(u16),
-}
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct KeyCode(evdev::KeyCode);
 
 impl KeyCode {
+    pub fn new(code: u16) -> Self {
+        Self(evdev::KeyCode::new(code))
+    }
+
     pub fn value(&self) -> u16 {
-        match self {
-            KeyCode::Evdev(keycode) => keycode.code(),
-            KeyCode::Custom(keycode) => *keycode,
-        }
+        self.0.code()
     }
 }
 
@@ -112,11 +110,11 @@ impl<'de> Deserialize<'de> for KeyCode {
         let key = String::deserialize(deserializer)?;
 
         match evdev::KeyCode::from_str(&key) {
-            Ok(value) => Ok(KeyCode::Evdev(value)),
+            Ok(value) => Ok(KeyCode(value)),
             _ => CUSTOM_KEYCODES.with_borrow_mut(|keycodes| {
                 let count = keycodes.len() as u16;
                 let entry = keycodes.entry(key).or_insert(count + SAFE_RANGE);
-                Ok(KeyCode::Custom(*entry))
+                Ok(KeyCode(evdev::KeyCode::new(*entry)))
             }),
         }
     }

@@ -14,8 +14,13 @@ pub enum KeyResult {
 pub struct KeyMacro(Vec<u16>);
 
 impl KeyMacro {
-    pub fn from_keycodes(keycodes: &[KeyCode]) -> Self {
-        Self(keycodes.iter().map(|code| code.value()).collect())
+    pub fn from_keycodes(keycodes: Vec<KeyCode>) -> Self {
+        Self(
+            keycodes
+                .into_iter()
+                .map(|keycode| keycode.value())
+                .collect(),
+        )
     }
 
     pub fn into_events(self) -> Vec<InputEvent> {

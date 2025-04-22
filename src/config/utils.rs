@@ -21,15 +21,10 @@ impl KeyCodeMap {
         self.0.get(code)
     }
 
-    pub fn get_keycode(&self, code: &u16) -> Option<u16> {
-        self.0.get(code).and_then(|value| match value {
-            KeyAction::KeyCode(keycode) => Some(keycode.value()),
-            KeyAction::Macro(_) => None,
-        })
-    }
-
-    pub fn map(&self, code: &u16) -> u16 {
-        self.get_keycode(code).unwrap_or(*code)
+    pub fn map(&self, code: &u16) -> KeyAction {
+        self.get(code)
+            .cloned()
+            .unwrap_or(KeyAction::KeyCode(KeyCode::new(*code)))
     }
 }
 

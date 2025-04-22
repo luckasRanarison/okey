@@ -69,27 +69,24 @@ impl KeyManager {
         Ok(())
     }
 
-    fn handle_press(&mut self, code: u16) -> KeyResult {
-        match self.mappings.get(&code) {
-            Some(KeyAction::KeyCode(keycode)) => KeyResult::KeyCode(keycode.value()),
-            Some(KeyAction::Macro(codes)) => KeyResult::KeyMacro(KeyMacro::from_keycodes(codes)),
-            None => KeyResult::KeyCode(code),
+    fn handle_press(&mut self, action: KeyAction) -> KeyResult {
+        match action {
+            KeyAction::KeyCode(keycode) => KeyResult::KeyCode(keycode.value()),
+            KeyAction::Macro(codes) => KeyResult::KeyMacro(KeyMacro::from_keycodes(codes)),
         }
     }
 
-    fn handle_hold(&mut self, code: u16) -> KeyResult {
-        match self.mappings.get(&code) {
-            Some(KeyAction::KeyCode(keycode)) => KeyResult::KeyCode(keycode.value()),
-            None => KeyResult::KeyCode(code),
-            _ => KeyResult::None,
+    fn handle_hold(&mut self, action: KeyAction) -> KeyResult {
+        match action {
+            KeyAction::KeyCode(keycode) => KeyResult::KeyCode(keycode.value()),
+            KeyAction::Macro(_) => KeyResult::None,
         }
     }
 
-    fn handle_release(&mut self, code: u16) -> KeyResult {
-        match self.mappings.get(&code) {
-            Some(KeyAction::KeyCode(keycode)) => KeyResult::KeyCode(keycode.value()),
-            None => KeyResult::KeyCode(code),
-            _ => KeyResult::None,
+    fn handle_release(&mut self, action: KeyAction) -> KeyResult {
+        match action {
+            KeyAction::KeyCode(keycode) => KeyResult::KeyCode(keycode.value()),
+            KeyAction::Macro(_) => KeyResult::None,
         }
     }
 }
