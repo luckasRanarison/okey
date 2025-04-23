@@ -81,7 +81,6 @@ impl KeyManager {
     }
 
     fn dispatch_result<E: EventEmitter>(&self, result: InputResult, emitter: &mut E) -> Result<()> {
-        println!("{result:?}");
         match result {
             InputResult::Press(code) => emitter.emit(&[code.to_event(PRESS_EVENT)]),
             InputResult::Hold(code) => emitter.emit(&[code.to_event(HOLD_EVENT)]),
