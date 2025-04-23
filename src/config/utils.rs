@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::config::schema::{KeyAction, KeyCode};
 
-use super::schema::{LayerConfig, LayerModifierKind, TapDanceConfig};
+use super::schema::{LayerConfig, LayerModifierKind};
 
 #[derive(Debug)]
 pub struct KeyCodeMap(HashMap<u16, KeyAction>);
@@ -61,21 +61,4 @@ impl From<LayerConfig> for LayerMap {
 pub struct LayerEntry {
     pub kind: LayerModifierKind,
     pub keys: KeyCodeMap,
-}
-
-#[derive(Debug)]
-pub struct TapDanceMap(HashMap<u16, TapDanceConfig>);
-
-impl TapDanceMap {
-    pub fn new(map: HashMap<KeyCode, TapDanceConfig>) -> Self {
-        Self(
-            map.into_iter()
-                .map(|(key, value)| (key.value(), value))
-                .collect(),
-        )
-    }
-
-    pub fn get(&self, code: &u16) -> Option<&TapDanceConfig> {
-        self.0.get(code)
-    }
 }

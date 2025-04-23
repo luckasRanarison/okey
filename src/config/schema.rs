@@ -1,6 +1,5 @@
 use std::{cell::RefCell, collections::HashMap, hash::Hash, str::FromStr};
 
-use evdev::{EventType, InputEvent};
 use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Deserialize)]
@@ -17,7 +16,7 @@ pub struct KeyboardConfig {
     pub layers: Option<LayerConfig>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct ComboConfig(pub Vec<ComboDefinition>);
 
 #[derive(Debug, Deserialize)]
@@ -98,7 +97,7 @@ impl KeyCode {
     }
 }
 
-const SAFE_RANGE: u16 = 999;
+pub const SAFE_KEYCODE_START: u16 = 999;
 
 thread_local! {
     static CUSTOM_KEYCODES: RefCell<HashMap<String, u16>> = HashMap::default().into();
@@ -115,7 +114,7 @@ impl<'de> Deserialize<'de> for KeyCode {
             Ok(value) => Ok(KeyCode(value)),
             _ => CUSTOM_KEYCODES.with_borrow_mut(|keycodes| {
                 let count = keycodes.len() as u16;
-                let entry = keycodes.entry(key).or_insert(count + SAFE_RANGE);
+                let entry = keycodes.entry(key).or_insert(count + SAFE_KEYCODE_START);
                 Ok(KeyCode(evdev::KeyCode::new(*entry)))
             }),
         }

@@ -1,38 +1,45 @@
 // use std::{collections::HashMap, time::Instant};
 
-use std::time::Instant;
-
 use anyhow::Result;
-use evdev::{EventType, InputEvent, uinput::VirtualDevice};
+use evdev::{InputEvent, uinput::VirtualDevice};
 
 use crate::config::{
-    schema::{KeyAction, KeyboardConfig, LayerConfig},
-    utils::{KeyCodeMap, LayerMap, TapDanceMap},
+    schema::{KeyAction, KeyCode, KeyboardConfig},
+    utils::KeyCodeMap,
 };
 
 use super::{
+    combo::ComboManager,
     event::{IntoInputEvent, IntoInputEvents},
-    key::{KeyResult, PressedKey, PressedKeyResult},
+    tap_dance::TapDanceManager,
 };
+
+#[derive(Debug)]
+enum InputResult {
+    KeyCode(KeyCode),
+    KeyMacro(Vec<KeyCode>),
+    None,
+}
 
 #[derive(Debug)]
 pub struct KeyManager {
     mappings: KeyCodeMap,
-    tap_dances: TapDanceMap,
+    tap_dance_manager: TapDanceManager,
+    combo_manager: ComboManager,
     // layer_manager: LayerManager,
-    pressed_keys: Vec<PressedKey>,
 }
 
 impl KeyManager {
     pub fn new(config: KeyboardConfig) -> Self {
         let mappings = KeyCodeMap::new(config.keys.unwrap_or_default());
-        let tap_dances = TapDanceMap::new(config.tap_dances.unwrap_or_default());
+        let tap_dance_manager = TapDanceManager::new(config.tap_dances.unwrap_or_default());
+        let combo_manager = ComboManager::new(config.combos.unwrap_or_default());
         // let layer_manager = LayerManager::new(config.layers);
 
         Self {
             mappings,
-            tap_dances,
-            pressed_keys: Vec::new(),
+            tap_dance_manager,
+            combo_manager,
             // layer_manager,
         }
     }
@@ -56,94 +63,72 @@ impl KeyManager {
     }
 
     pub fn post_process(&mut self, virtual_device: &mut VirtualDevice) -> Result<()> {
-        if self.pressed_keys.is_empty() {
-            return Ok(());
-        }
+        self.tap_dance_manager
+            .process(|action| Ok(virtual_device.emit(&action.to_events())?))?;
 
-        let now = Instant::now();
-        let mut processed = Vec::new();
-
-        for (idx, state) in self.pressed_keys.iter().enumerate() {
-            if let Some(result) = state.get_dance_action(now) {
-                virtual_device.emit(&result.to_events())?;
-                processed.push(idx);
-            }
-        }
-
-        for &idx in processed.iter().rev() {
-            self.pressed_keys.remove(idx);
-        }
+        self.combo_manager
+            .process(|action| Ok(virtual_device.emit(&action.to_events())?))?;
 
         Ok(())
     }
 
     fn dispatch_result(
         &mut self,
-        result: KeyResult,
+        result: InputResult,
         event_value: i32,
         virtual_device: &mut VirtualDevice,
     ) -> Result<()> {
         match result {
-            KeyResult::KeyCode(code) => {
+            InputResult::KeyCode(code) => {
                 virtual_device.emit(&[code.to_event(event_value)])?;
             }
-            KeyResult::KeyMacro(codes) => {
+            InputResult::KeyMacro(codes) => {
                 virtual_device.emit(&codes.to_events())?;
             }
-            KeyResult::None => {}
+            InputResult::None => {}
         }
 
         Ok(())
     }
 
-    fn handle_press(&mut self, action: KeyAction) -> KeyResult {
+    fn handle_press(&mut self, action: KeyAction) -> InputResult {
         match action {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                if let Some(config) = self.tap_dances.get(&value) {
-                    let key = PressedKey {
-                        code: value,
-                        timeout: config.timeout,
-                        timestamp: Instant::now(),
-                        released: false,
-                        result: PressedKeyResult::TapDance {
-                            tap: config.tap.clone(),
-                            hold: config.hold.clone(),
-                        },
-                    };
-
-                    self.pressed_keys.push(key);
-
-                    KeyResult::None
+                if self.tap_dance_manager.handle_press(value)
+                    || self.combo_manager.handle_press(value)
+                {
+                    InputResult::None
                 } else {
-                    KeyResult::KeyCode(code)
+                    InputResult::KeyCode(code)
                 }
             }
-            KeyAction::Macro(codes) => KeyResult::KeyMacro(codes),
+            KeyAction::Macro(codes) => InputResult::KeyMacro(codes),
         }
     }
 
-    fn handle_hold(&mut self, action: KeyAction) -> KeyResult {
+    fn handle_hold(&mut self, action: KeyAction) -> InputResult {
         match action {
-            KeyAction::KeyCode(code) => KeyResult::KeyCode(code),
-            KeyAction::Macro(_) => KeyResult::None,
+            KeyAction::KeyCode(code) => InputResult::KeyCode(code),
+            KeyAction::Macro(_) => InputResult::None,
         }
     }
 
-    fn handle_release(&mut self, action: KeyAction) -> KeyResult {
+    fn handle_release(&mut self, action: KeyAction) -> InputResult {
         match action {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                if let Some(state) = self.pressed_keys.iter_mut().find(|s| s.code == value) {
-                    state.released = true;
-                    KeyResult::None
+                if self.tap_dance_manager.handle_release(value)
+                    || self.combo_manager.handle_release(value)
+                {
+                    InputResult::None
                 } else {
-                    KeyResult::KeyCode(code)
+                    InputResult::KeyCode(code)
                 }
             }
-            _ => KeyResult::None,
+            _ => InputResult::None,
         }
     }
 }
