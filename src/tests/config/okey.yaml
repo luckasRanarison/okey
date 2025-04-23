@@ -1,0 +1,42 @@
+# defaults:
+#   tap_dance:
+#     default_timeout: 200
+#   combo:
+#     default_threshold: 75
+
+keyboards:
+  - name: "AT Translated Set 2 keyboard"
+
+    keys:
+      KEY_Q: KEY_W
+      KEY_B: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
+
+    combos:
+      - keys: [KEY_D, KEY_F]
+        action: KEY_LEFTCTRL
+        # action: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
+
+      - keys: [KEY_H, KEY_J, KEY_K]
+        action: KEY_BACKSPACE
+
+    tap_dances:
+      KEY_S:
+        tap: KEY_S
+        hold: KEY_LEFTSHIFT
+
+      KEY_H:
+        tap: [KEY_H, KEY_I]
+        hold: [KEY_H, KEY_E, KEY_Y]
+
+    layers:
+      my_layer:
+        modifier:
+          key: KEY_C
+          # type: momentary # toggle # oneshoot
+        keys:
+          KEY_A: KEY_D
+
+      another:
+        modifier: KEY_D
+        keys:
+          KEY_C: KEY_A

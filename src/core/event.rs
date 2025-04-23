@@ -1,4 +1,5 @@
-use evdev::{EventType, InputEvent};
+use anyhow::Result;
+use evdev::{EventType, InputEvent, uinput::VirtualDevice};
 
 use crate::config::schema::{KeyAction, KeyCode};
 
@@ -12,6 +13,16 @@ pub trait IntoInputEvent {
 
 pub trait IntoInputEvents {
     fn to_events(&self) -> Vec<InputEvent>;
+}
+
+pub trait EventEmitter {
+    fn emit(&mut self, events: &[InputEvent]) -> Result<()>;
+}
+
+impl EventEmitter for VirtualDevice {
+    fn emit(&mut self, events: &[InputEvent]) -> Result<()> {
+        Ok(self.emit(events)?)
+    }
 }
 
 impl IntoInputEvent for KeyCode {

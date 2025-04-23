@@ -42,6 +42,10 @@ impl TapDanceManager {
         }
     }
 
+    pub fn handle_hold(&mut self, code: u16) -> Option<InputResult> {
+        self.tap_dances.get(&code).map(|_| InputResult::None)
+    }
+
     pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|s| s.code == code);
 

@@ -5,7 +5,7 @@ use clap::Parser;
 use okey::{
     cli::{Cli, Command},
     config::schema::Config,
-    core::EventEmitter,
+    core::EventProxy,
     fs::device::find_device_by_name,
 };
 
@@ -25,7 +25,7 @@ fn main() -> Result<()> {
                     let device = find_device_by_name(&keyboard.name)?;
 
                     if let Some(device) = device {
-                        Ok(EventEmitter::new(device, keyboard, defaults)?.init_hook()?)
+                        Ok(EventProxy::new(device, keyboard, defaults)?.init_hook()?)
                     } else {
                         Err(anyhow!("Device not found"))
                     }

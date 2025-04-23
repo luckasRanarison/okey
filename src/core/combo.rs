@@ -44,9 +44,7 @@ impl ComboManager {
 
     pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
         if self.key_set.contains(&code) {
-            self.pressed_keys
-                .insert(code, ComboKey::new(self.config.default_threshold));
-
+            self.pressed_keys.insert(code, ComboKey::new());
             Some(InputResult::None)
         } else {
             None
@@ -55,11 +53,16 @@ impl ComboManager {
 
     pub fn handle_hold(&mut self, code: u16) -> Option<InputResult> {
         if let Some(key) = self.pressed_keys.get_mut(&code) {
-            key.hold = true;
-            Some(InputResult::None)
-        } else {
-            None
+            let now = Instant::now();
+            let elapsed = now.duration_since(key.timestamp).as_millis();
+
+            if elapsed > self.config.default_threshold as u128 {
+                key.hold = true;
+                return Some(InputResult::None);
+            }
         }
+
+        None
     }
 
     pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
@@ -87,6 +90,7 @@ impl ComboManager {
 
     fn process_key_results(&mut self, results: &mut Vec<InputResult>) {
         let now = Instant::now();
+        let threshold = self.config.default_threshold;
         let mut processed = Vec::new();
 
         for (&code, key) in &self.pressed_keys {
@@ -98,7 +102,12 @@ impl ComboManager {
                 continue;
             }
 
-            if let Some(result) = key.get_key_result(code, now) {
+            if let Some(result) = key.get_key_result(code, now, threshold) {
+                // Hold event, pass control back to the main handler
+                if let InputResult::Press(_) = &result {
+                    processed.push(code);
+                }
+
                 results.push(result);
             }
         }
@@ -181,26 +190,24 @@ impl ComboManager {
 
 #[derive(Debug)]
 struct ComboKey {
-    timeout: u16,
     timestamp: Instant,
     released: bool,
     hold: bool,
 }
 
 impl ComboKey {
-    fn new(threshold: u16) -> Self {
+    fn new() -> Self {
         ComboKey {
-            timeout: threshold,
             timestamp: Instant::now(),
             released: false,
             hold: false,
         }
     }
 
-    fn get_key_result(&self, code: u16, now: Instant) -> Option<InputResult> {
+    fn get_key_result(&self, code: u16, now: Instant, threshold: u16) -> Option<InputResult> {
         let elapsed = now.duration_since(self.timestamp).as_millis();
 
-        if elapsed < self.timeout as u128 {
+        if elapsed < threshold as u128 {
             return None;
         }
 

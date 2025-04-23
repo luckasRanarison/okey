@@ -1,8 +1,10 @@
 mod combo;
 mod event;
-mod hook;
 mod manager;
 mod mapping;
+mod proxy;
 mod tap_dance;
 
-pub use hook::EventEmitter;
+pub use event::EventEmitter;
+pub use manager::KeyManager;
+pub use proxy::EventProxy;

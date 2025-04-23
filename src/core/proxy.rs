@@ -7,12 +7,12 @@ use crate::config::schema::{DefaultConfig, KeyboardConfig};
 use super::manager::KeyManager;
 
 #[derive(Debug)]
-pub struct EventEmitter {
+pub struct EventProxy {
     device: Device,
     key_manager: KeyManager,
 }
 
-impl EventEmitter {
+impl EventProxy {
     pub fn new(device: Device, config: KeyboardConfig, general: DefaultConfig) -> Result<Self> {
         let key_manager = KeyManager::new(config, general);
 
