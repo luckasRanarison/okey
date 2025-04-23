@@ -14,7 +14,6 @@ keyboards:
     combos:
       - keys: [KEY_D, KEY_F]
         action: KEY_LEFTCTRL
-        # action: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
 
       - keys: [KEY_H, KEY_J, KEY_K]
         action: KEY_BACKSPACE
