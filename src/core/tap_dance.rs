@@ -1,8 +1,8 @@
 use std::{collections::HashMap, time::Instant};
 
-use anyhow::Result;
-
 use crate::config::schema::{KeyAction, KeyCode, TapDanceConfig};
+
+use super::manager::InputResult;
 
 #[derive(Debug)]
 pub struct TapDanceManager {
@@ -23,47 +23,63 @@ impl TapDanceManager {
         }
     }
 
-    pub fn handle_press(&mut self, code: u16) -> bool {
+    pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
         if let Some(config) = self.tap_dances.get(&code) {
             self.pressed_keys.push(PressedKey::new(code, config));
-            true
+            Some(InputResult::None)
         } else {
-            false
+            None
         }
     }
 
-    pub fn handle_release(&mut self, code: u16) -> bool {
+    pub fn handle_hold(&self, code: u16) -> Option<InputResult> {
+        let key = self.pressed_keys.iter().find(|s| s.code == code);
+
+        if let Some(key) = key {
+            match &key.hold {
+                KeyAction::KeyCode(code) => Some(InputResult::KeyHold(code.clone())),
+                KeyAction::Macro(codes) => Some(InputResult::KeyMacro(codes.clone())),
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|s| s.code == code);
 
         if let Some(key) = key {
             key.released = true;
-            true
+            Some(InputResult::None)
         } else {
-            false
+            None
         }
     }
 
-    pub fn process<F>(&mut self, mut hanle_action: F) -> Result<()>
-    where
-        F: FnMut(&KeyAction) -> Result<()>,
-    {
-        if !self.pressed_keys.is_empty() {
-            let now = Instant::now();
-            let mut processed = Vec::new();
+    pub fn process(&mut self) -> Option<Vec<InputResult>> {
+        if self.pressed_keys.is_empty() {
+            return None;
+        }
 
-            for (idx, state) in self.pressed_keys.iter().enumerate() {
-                if let Some(action) = state.get_dance_action(now) {
-                    hanle_action(action)?;
-                    processed.push(idx);
-                }
-            }
+        let now = Instant::now();
+        let mut results = Vec::new();
+        let mut processed = Vec::new();
 
-            for &idx in processed.iter().rev() {
-                self.pressed_keys.remove(idx);
+        for (idx, state) in self.pressed_keys.iter().enumerate() {
+            let result = state.get_dance_result(now);
+
+            results.push(result);
+
+            if state.released {
+                processed.push(idx);
             }
         }
 
-        Ok(())
+        for &idx in processed.iter().rev() {
+            self.pressed_keys.remove(idx);
+        }
+
+        Some(results)
     }
 }
 
@@ -89,15 +105,23 @@ impl PressedKey {
         }
     }
 
-    fn get_dance_action(&self, now: Instant) -> Option<&KeyAction> {
+    fn get_dance_result(&self, now: Instant) -> InputResult {
         let elapsed = now.duration_since(self.timestamp).as_millis();
 
+        if !self.released {
+            return InputResult::None;
+        }
+
         if elapsed > self.timeout as u128 {
-            Some(&self.hold)
-        } else if self.released {
-            Some(&self.tap)
+            match &self.hold {
+                KeyAction::KeyCode(code) => InputResult::KeyRelease(code.clone()),
+                KeyAction::Macro(_) => InputResult::None,
+            }
         } else {
-            None
+            match self.tap.clone() {
+                KeyAction::KeyCode(code) => InputResult::KeyPress(code),
+                KeyAction::Macro(codes) => InputResult::KeyMacro(codes),
+            }
         }
     }
 }

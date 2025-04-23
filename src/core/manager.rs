@@ -15,8 +15,11 @@ use super::{
 };
 
 #[derive(Debug)]
-enum InputResult {
-    KeyCode(KeyCode),
+pub enum InputResult {
+    KeyCode { code: KeyCode, value: i32 },
+    KeyPress(KeyCode),
+    KeyHold(KeyCode),
+    KeyRelease(KeyCode),
     KeyMacro(Vec<KeyCode>),
     None,
 }
@@ -59,12 +62,15 @@ impl KeyManager {
             _ => self.handle_release(code),
         };
 
-        self.dispatch_result(result, value, virtual_device)
+        self.dispatch_result(result, virtual_device)
     }
 
     pub fn post_process(&mut self, virtual_device: &mut VirtualDevice) -> Result<()> {
-        self.tap_dance_manager
-            .process(|action| Ok(virtual_device.emit(&action.to_events())?))?;
+        if let Some(results) = self.tap_dance_manager.process() {
+            for result in results {
+                self.dispatch_result(result, virtual_device)?;
+            }
+        }
 
         self.combo_manager
             .process(|action| Ok(virtual_device.emit(&action.to_events())?))?;
@@ -73,14 +79,22 @@ impl KeyManager {
     }
 
     fn dispatch_result(
-        &mut self,
+        &self,
         result: InputResult,
-        event_value: i32,
         virtual_device: &mut VirtualDevice,
     ) -> Result<()> {
         match result {
-            InputResult::KeyCode(code) => {
-                virtual_device.emit(&[code.to_event(event_value)])?;
+            InputResult::KeyCode { code, value } => {
+                virtual_device.emit(&[code.to_event(value)])?;
+            }
+            InputResult::KeyPress(code) => {
+                virtual_device.emit(&[code.to_event(1), code.to_event(0)])?;
+            }
+            InputResult::KeyHold(code) => {
+                virtual_device.emit(&[code.to_event(1), code.to_event(2)])?;
+            }
+            InputResult::KeyRelease(code) => {
+                virtual_device.emit(&[code.to_event(0)])?;
             }
             InputResult::KeyMacro(codes) => {
                 virtual_device.emit(&codes.to_events())?;
@@ -96,13 +110,9 @@ impl KeyManager {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                if self.tap_dance_manager.handle_press(value)
-                    || self.combo_manager.handle_press(value)
-                {
-                    InputResult::None
-                } else {
-                    InputResult::KeyCode(code)
-                }
+                self.tap_dance_manager
+                    .handle_press(value)
+                    .unwrap_or(InputResult::KeyCode { code, value: 1 })
             }
             KeyAction::Macro(codes) => InputResult::KeyMacro(codes),
         }
@@ -110,7 +120,13 @@ impl KeyManager {
 
     fn handle_hold(&mut self, action: KeyAction) -> InputResult {
         match action {
-            KeyAction::KeyCode(code) => InputResult::KeyCode(code),
+            KeyAction::KeyCode(code) => {
+                let value = code.value();
+
+                self.tap_dance_manager
+                    .handle_hold(value)
+                    .unwrap_or(InputResult::KeyCode { code, value: 2 })
+            }
             KeyAction::Macro(_) => InputResult::None,
         }
     }
@@ -120,13 +136,9 @@ impl KeyManager {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                if self.tap_dance_manager.handle_release(value)
-                    || self.combo_manager.handle_release(value)
-                {
-                    InputResult::None
-                } else {
-                    InputResult::KeyCode(code)
-                }
+                self.tap_dance_manager
+                    .handle_release(value)
+                    .unwrap_or(InputResult::KeyCode { code, value: 0 })
             }
             _ => InputResult::None,
         }
