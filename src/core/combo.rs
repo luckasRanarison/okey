@@ -15,8 +15,8 @@ pub struct ComboManager {
     key_set: HashSet<u16>,
     definitions: Vec<ComboDefinition>,
     pressed_keys: HashMap<u16, ComboKey>,
-    active_combos: HashMap<u16, Vec<KeyCode>>,
     supressed_keys: HashSet<u16>,
+    active_combos: Vec<ActiveCombo>,
     config: DefaultComboConfig,
 }
 
@@ -37,8 +37,8 @@ impl ComboManager {
             key_set,
             definitions,
             pressed_keys: HashMap::new(),
-            active_combos: HashMap::new(),
             supressed_keys: HashSet::new(),
+            active_combos: Vec::new(),
         }
     }
 
@@ -111,49 +111,67 @@ impl ComboManager {
     fn process_active_combos(&mut self, results: &mut Vec<InputResult>) {
         let mut processed_combos = Vec::new();
 
-        for (&code, keys) in &self.active_combos {
-            if let Some(key) = keys
+        for (idx, combo) in self.active_combos.iter().enumerate() {
+            if let Some(key) = combo
+                .keys
                 .iter()
                 .find_map(|key| self.pressed_keys.get(&key.value()))
             {
-                if key.hold {
-                    results.push(InputResult::Hold(KeyCode::new(code)));
+                if let Some(code) = combo.code {
+                    if key.hold {
+                        results.push(InputResult::Hold(KeyCode::new(code)));
+                    }
                 }
             } else {
-                results.push(InputResult::Release(KeyCode::new(code)));
-                processed_combos.push(code);
+                if let Some(code) = combo.code {
+                    results.push(InputResult::Release(KeyCode::new(code)));
+                }
 
-                for key in keys {
+                for key in &combo.keys {
                     self.supressed_keys.remove(&key.value());
                 }
+
+                processed_combos.push(idx);
             }
         }
 
-        for code in processed_combos {
-            self.active_combos.remove(&code);
+        for &idx in processed_combos.iter().rev() {
+            self.active_combos.remove(idx);
         }
     }
 
     fn process_combo_trigger(&mut self, results: &mut Vec<InputResult>) {
         for combo in &self.definitions {
-            let active = combo.keys.iter().all(|key| {
+            let is_active = combo
+                .keys
+                .iter()
+                .any(|k| self.supressed_keys.contains(&k.value()));
+
+            if is_active {
+                continue;
+            }
+
+            let should_activate = combo.keys.iter().all(|key| {
                 self.pressed_keys
                     .get(&key.value())
                     .is_some_and(|value| !value.hold)
             });
 
-            if active {
+            if should_activate {
                 self.supressed_keys
                     .extend(combo.keys.iter().map(|key| key.value()));
 
-                let result = match &combo.action {
+                let (code, result) = match &combo.action {
                     KeyAction::KeyCode(code) => {
-                        self.active_combos.insert(code.value(), combo.keys.clone());
-
-                        InputResult::Press(code.clone())
+                        (Some(code.value()), InputResult::Press(code.clone()))
                     }
-                    KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
+                    KeyAction::Macro(codes) => (None, InputResult::Macro(codes.clone())),
                 };
+
+                self.active_combos.push(ActiveCombo {
+                    code,
+                    keys: combo.keys.clone(),
+                });
 
                 results.push(result);
             }
@@ -203,4 +221,10 @@ impl ComboKey {
 
         None
     }
+}
+
+#[derive(Debug)]
+struct ActiveCombo {
+    code: Option<u16>,
+    keys: Vec<KeyCode>,
 }
