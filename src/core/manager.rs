@@ -2,7 +2,7 @@ use anyhow::Result;
 use evdev::{InputEvent, uinput::VirtualDevice};
 
 use crate::config::{
-    schema::{KeyAction, KeyCode, KeyboardConfig},
+    schema::{DefaultConfig, KeyAction, KeyCode, KeyboardConfig},
     utils::KeyCodeMap,
 };
 
@@ -25,16 +25,16 @@ pub enum InputResult {
 #[derive(Debug)]
 pub struct KeyManager {
     mappings: KeyCodeMap,
-    tap_dance_manager: TapDanceManager,
     combo_manager: ComboManager,
+    tap_dance_manager: TapDanceManager,
     // layer_manager: LayerManager,
 }
 
 impl KeyManager {
-    pub fn new(config: KeyboardConfig) -> Self {
-        let mappings = KeyCodeMap::new(config.keys.unwrap_or_default());
-        let tap_dance_manager = TapDanceManager::new(config.tap_dances.unwrap_or_default());
-        let combo_manager = ComboManager::new(config.combos.unwrap_or_default());
+    pub fn new(config: KeyboardConfig, general: DefaultConfig) -> Self {
+        let mappings = KeyCodeMap::new(config.keys);
+        let combo_manager = ComboManager::new(config.combos, general.combo);
+        let tap_dance_manager = TapDanceManager::new(config.tap_dances, general.tap_dance);
         // let layer_manager = LayerManager::new(config.layers);
 
         Self {
@@ -142,26 +142,3 @@ impl KeyManager {
         }
     }
 }
-
-// #[derive(Debug)]
-// struct LayerManager {
-//     layer_map: LayerMap,
-//     layer_stack: Vec<u16>,
-// }
-//
-// impl LayerManager {
-//     fn new(config: Option<LayerConfig>) -> Self {
-//         Self {
-//             layer_map: config.map(LayerMap::from).unwrap_or_default(),
-//             layer_stack: Vec::new(),
-//         }
-//     }
-//
-//     fn map(&self, code: &u16) -> u16 {
-//         *code
-//     }
-//
-//     fn on_press(&mut self, code: &u16) {}
-//
-//     fn on_release(&mut self, code: &u16) {}
-// }

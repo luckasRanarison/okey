@@ -28,37 +28,37 @@ impl KeyCodeMap {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct LayerMap(HashMap<u16, LayerEntry>);
-
-impl LayerMap {
-    pub fn get_entry(&self, keycode: &u16) -> Option<&LayerEntry> {
-        self.0.get(keycode)
-    }
-}
-
-impl From<LayerConfig> for LayerMap {
-    fn from(value: LayerConfig) -> Self {
-        let map = value
-            .0
-            .into_values()
-            .map(|value| {
-                (
-                    value.modifier.get_modifer().value(),
-                    LayerEntry {
-                        kind: value.modifier.get_modifer_kind(),
-                        keys: KeyCodeMap::new(value.keys),
-                    },
-                )
-            })
-            .collect();
-
-        Self(map)
-    }
-}
-
-#[derive(Debug)]
-pub struct LayerEntry {
-    pub kind: LayerModifierKind,
-    pub keys: KeyCodeMap,
-}
+// #[derive(Debug, Default)]
+// pub struct LayerMap(HashMap<u16, LayerEntry>);
+//
+// impl LayerMap {
+//     pub fn get_entry(&self, keycode: &u16) -> Option<&LayerEntry> {
+//         self.0.get(keycode)
+//     }
+// }
+//
+// impl From<LayerConfig> for LayerMap {
+//     fn from(value: LayerConfig) -> Self {
+//         let map = value
+//             .0
+//             .into_values()
+//             .map(|value| {
+//                 (
+//                     value.modifier.get_modifer().value(),
+//                     LayerEntry {
+//                         kind: value.modifier.get_modifer_kind(),
+//                         keys: KeyCodeMap::new(value.keys),
+//                     },
+//                 )
+//             })
+//             .collect();
+//
+//         Self(map)
+//     }
+// }
+//
+// #[derive(Debug)]
+// pub struct LayerEntry {
+//     pub kind: LayerModifierKind,
+//     pub keys: KeyCodeMap,
+// }

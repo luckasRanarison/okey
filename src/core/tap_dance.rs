@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Instant};
 
-use crate::config::schema::{KeyAction, KeyCode, TapDanceConfig};
+use crate::config::schema::{DefaultTapDanceConfig, KeyAction, KeyCode, TapDanceConfig};
 
 use super::{
     event::{HOLD_EVENT, PRESS_EVENT, RELEASE_EVENT},
@@ -11,16 +11,21 @@ use super::{
 pub struct TapDanceManager {
     tap_dances: HashMap<u16, TapDanceConfig>,
     pressed_keys: Vec<PressedKey>,
+    config: DefaultTapDanceConfig,
 }
 
 impl TapDanceManager {
-    pub fn new(config: HashMap<KeyCode, TapDanceConfig>) -> Self {
-        let tap_dances = config
+    pub fn new(
+        tap_dances: HashMap<KeyCode, TapDanceConfig>,
+        config: DefaultTapDanceConfig,
+    ) -> Self {
+        let tap_dances = tap_dances
             .into_iter()
             .map(|(key, value)| (key.value(), value))
             .collect();
 
         Self {
+            config,
             tap_dances,
             pressed_keys: Vec::new(),
         }
@@ -28,7 +33,9 @@ impl TapDanceManager {
 
     pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
         if let Some(config) = self.tap_dances.get(&code) {
-            self.pressed_keys.push(PressedKey::new(code, config));
+            self.pressed_keys
+                .push(PressedKey::new(code, config, self.config.default_timeout));
+
             Some(InputResult::None)
         } else {
             None
@@ -84,10 +91,10 @@ struct PressedKey {
 }
 
 impl PressedKey {
-    fn new(code: u16, config: &TapDanceConfig) -> Self {
+    fn new(code: u16, config: &TapDanceConfig, default_timeout: u16) -> Self {
         PressedKey {
             code,
-            timeout: config.timeout,
+            timeout: config.timeout.unwrap_or(default_timeout),
             timestamp: Instant::now(),
             released: false,
             tap: config.tap.clone(),

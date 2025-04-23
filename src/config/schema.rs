@@ -2,18 +2,60 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, str::FromStr};
 
 use serde::{Deserialize, Deserializer};
 
+use super::defaults;
+
 #[derive(Debug, Deserialize)]
 pub struct Config {
+    #[serde(default)]
+    pub defaults: DefaultConfig,
     pub keyboards: Vec<KeyboardConfig>,
+}
+
+#[derive(Debug, Default, Clone, Deserialize)]
+pub struct DefaultConfig {
+    pub tap_dance: DefaultTapDanceConfig,
+    pub combo: DefaultComboConfig,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DefaultTapDanceConfig {
+    #[serde(default = "defaults::tap_dance_timeout")]
+    pub default_timeout: u16,
+}
+
+impl Default for DefaultTapDanceConfig {
+    fn default() -> Self {
+        Self {
+            default_timeout: defaults::TAP_DANCE_TIMEOUT,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DefaultComboConfig {
+    #[serde(default = "defaults::combo_threshold")]
+    pub default_threshold: u16,
+}
+
+impl Default for DefaultComboConfig {
+    fn default() -> Self {
+        Self {
+            default_threshold: defaults::COMBO_THRESHOLD,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
 pub struct KeyboardConfig {
     pub name: String,
-    pub keys: Option<HashMap<KeyCode, KeyAction>>,
-    pub combos: Option<ComboConfig>,
-    pub tap_dances: Option<HashMap<KeyCode, TapDanceConfig>>,
-    pub layers: Option<LayerConfig>,
+    #[serde(default)]
+    pub keys: HashMap<KeyCode, KeyAction>,
+    #[serde(default)]
+    pub combos: ComboConfig,
+    #[serde(default)]
+    pub tap_dances: HashMap<KeyCode, TapDanceConfig>,
+    #[serde(default)]
+    pub layers: LayerConfig,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -27,12 +69,12 @@ pub struct ComboDefinition {
 
 #[derive(Debug, Deserialize)]
 pub struct TapDanceConfig {
-    pub timeout: u16,
+    pub timeout: Option<u16>,
     pub tap: KeyAction,
     pub hold: KeyAction,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct LayerConfig(pub HashMap<String, LayerDefinition>);
 
 #[derive(Debug, Deserialize)]

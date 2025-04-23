@@ -3,7 +3,7 @@ use std::{
     time::Instant,
 };
 
-use crate::config::schema::{ComboConfig, ComboDefinition, KeyAction};
+use crate::config::schema::{ComboConfig, ComboDefinition, DefaultComboConfig, KeyAction};
 
 use super::manager::InputResult;
 
@@ -12,32 +12,34 @@ pub struct ComboManager {
     keys_set: HashSet<u16>,
     defintions: Vec<ComboDefinition>,
     pressed_keys: HashMap<u16, ComboKey>,
+    config: DefaultComboConfig,
 }
 
 impl ComboManager {
-    pub fn new(config: ComboConfig) -> Self {
-        let key_set = config
+    pub fn new(combos: ComboConfig, config: DefaultComboConfig) -> Self {
+        let key_set = combos
             .0
             .iter()
             .flat_map(|def| def.keys.iter().map(|key| key.value()))
             .collect();
 
-        let mut definitions = config.0;
+        let mut definitions = combos.0;
 
         definitions.sort_by(|a, b| b.keys.len().cmp(&a.keys.len()));
 
         Self {
+            config,
             keys_set: key_set,
             defintions: definitions,
             pressed_keys: HashMap::new(),
         }
     }
 
-    pub fn handle_press(&mut self, _code: u16) -> Option<InputResult> {
+    pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
         None
     }
 
-    pub fn handle_release(&mut self, _code: u16) -> Option<InputResult> {
+    pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
         None
     }
 

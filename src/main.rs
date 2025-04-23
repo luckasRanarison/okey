@@ -5,7 +5,7 @@ use clap::Parser;
 use okey::{
     cli::{Cli, Command},
     config::schema::Config,
-    core::{device::find_device_by_name, hook::EventHandler},
+    core::{device::find_device_by_name, hook::EventEmitter},
 };
 
 fn main() -> Result<()> {
@@ -18,11 +18,15 @@ fn main() -> Result<()> {
             let mut handles = Vec::new();
 
             for keyboard in parsed.keyboards {
+                let defaults = parsed.defaults.clone();
+
+                println!("{defaults:?}");
+
                 let handle = thread::spawn(|| -> Result<()> {
                     let device = find_device_by_name(&keyboard.name)?;
 
                     if let Some(device) = device {
-                        Ok(EventHandler::new(device, keyboard)?.init_hook()?)
+                        Ok(EventEmitter::new(device, keyboard, defaults)?.init_hook()?)
                     } else {
                         Err(anyhow!("Device not found"))
                     }

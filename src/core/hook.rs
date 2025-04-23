@@ -2,19 +2,19 @@ use anyhow::Result;
 use evdev::{Device, EventType, uinput::VirtualDevice};
 use nix::sys::epoll::{Epoll, EpollCreateFlags, EpollEvent, EpollFlags};
 
-use crate::config::schema::KeyboardConfig;
+use crate::config::schema::{DefaultConfig, KeyboardConfig};
 
 use super::manager::KeyManager;
 
 #[derive(Debug)]
-pub struct EventHandler {
+pub struct EventEmitter {
     device: Device,
     key_manager: KeyManager,
 }
 
-impl EventHandler {
-    pub fn new(device: Device, config: KeyboardConfig) -> Result<Self> {
-        let key_manager = KeyManager::new(config);
+impl EventEmitter {
+    pub fn new(device: Device, config: KeyboardConfig, general: DefaultConfig) -> Result<Self> {
+        let key_manager = KeyManager::new(config, general);
 
         Ok(Self {
             device,
