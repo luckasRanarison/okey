@@ -5,7 +5,8 @@ use clap::Parser;
 use okey::{
     cli::{Cli, Command},
     config::schema::Config,
-    core::{device::find_device_by_name, hook::EventEmitter},
+    core::EventEmitter,
+    fs::device::find_device_by_name,
 };
 
 fn main() -> Result<()> {

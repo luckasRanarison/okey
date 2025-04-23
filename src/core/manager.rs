@@ -1,14 +1,12 @@
 use anyhow::Result;
 use evdev::{InputEvent, uinput::VirtualDevice};
 
-use crate::config::{
-    schema::{DefaultConfig, KeyAction, KeyCode, KeyboardConfig},
-    utils::KeyCodeMap,
-};
+use crate::config::schema::{DefaultConfig, KeyAction, KeyCode, KeyboardConfig};
 
 use super::{
     combo::ComboManager,
     event::{HOLD_EVENT, IntoInputEvent, IntoInputEvents, PRESS_EVENT, RELEASE_EVENT},
+    mapping::MappingManager,
     tap_dance::TapDanceManager,
 };
 
@@ -24,7 +22,7 @@ pub enum InputResult {
 
 #[derive(Debug)]
 pub struct KeyManager {
-    mappings: KeyCodeMap,
+    mapping_manager: MappingManager,
     combo_manager: ComboManager,
     tap_dance_manager: TapDanceManager,
     // layer_manager: LayerManager,
@@ -32,13 +30,13 @@ pub struct KeyManager {
 
 impl KeyManager {
     pub fn new(config: KeyboardConfig, general: DefaultConfig) -> Self {
-        let mappings = KeyCodeMap::new(config.keys);
+        let mapping_manager = MappingManager::new(config.keys);
         let combo_manager = ComboManager::new(config.combos, general.combo);
         let tap_dance_manager = TapDanceManager::new(config.tap_dances, general.tap_dance);
         // let layer_manager = LayerManager::new(config.layers);
 
         Self {
-            mappings,
+            mapping_manager,
             tap_dance_manager,
             combo_manager,
             // layer_manager,
@@ -50,7 +48,7 @@ impl KeyManager {
         event: InputEvent,
         virtual_device: &mut VirtualDevice,
     ) -> Result<()> {
-        let code = self.mappings.map(&event.code());
+        let code = self.mapping_manager.map(&event.code());
         // let code = self.layer_manager.map(&code);
         let value = event.value();
 
