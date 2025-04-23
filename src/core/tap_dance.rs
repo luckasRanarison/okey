@@ -2,7 +2,10 @@ use std::{collections::HashMap, time::Instant};
 
 use crate::config::schema::{KeyAction, KeyCode, TapDanceConfig};
 
-use super::manager::InputResult;
+use super::{
+    event::{HOLD_EVENT, PRESS_EVENT, RELEASE_EVENT},
+    manager::InputResult,
+};
 
 #[derive(Debug)]
 pub struct TapDanceManager {
@@ -27,19 +30,6 @@ impl TapDanceManager {
         if let Some(config) = self.tap_dances.get(&code) {
             self.pressed_keys.push(PressedKey::new(code, config));
             Some(InputResult::None)
-        } else {
-            None
-        }
-    }
-
-    pub fn handle_hold(&self, code: u16) -> Option<InputResult> {
-        let key = self.pressed_keys.iter().find(|s| s.code == code);
-
-        if let Some(key) = key {
-            match &key.hold {
-                KeyAction::KeyCode(code) => Some(InputResult::KeyHold(code.clone())),
-                KeyAction::Macro(codes) => Some(InputResult::KeyMacro(codes.clone())),
-            }
         } else {
             None
         }
@@ -107,21 +97,33 @@ impl PressedKey {
 
     fn get_dance_result(&self, now: Instant) -> InputResult {
         let elapsed = now.duration_since(self.timestamp).as_millis();
+        let timeout = self.timeout as u128;
 
-        if !self.released {
-            return InputResult::None;
-        }
-
-        if elapsed > self.timeout as u128 {
+        if self.released {
+            if elapsed > timeout {
+                match &self.hold {
+                    KeyAction::KeyCode(code) => InputResult::Release(code.clone()),
+                    KeyAction::Macro(_) => InputResult::None,
+                }
+            } else {
+                match &self.tap {
+                    KeyAction::KeyCode(code) => InputResult::DoubleSequence {
+                        code: code.clone(),
+                        events: [PRESS_EVENT, RELEASE_EVENT],
+                    },
+                    KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
+                }
+            }
+        } else if elapsed > timeout {
             match &self.hold {
-                KeyAction::KeyCode(code) => InputResult::KeyRelease(code.clone()),
-                KeyAction::Macro(_) => InputResult::None,
+                KeyAction::KeyCode(code) => InputResult::DoubleSequence {
+                    code: code.clone(),
+                    events: [PRESS_EVENT, HOLD_EVENT],
+                },
+                KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
             }
         } else {
-            match self.tap.clone() {
-                KeyAction::KeyCode(code) => InputResult::KeyPress(code),
-                KeyAction::Macro(codes) => InputResult::KeyMacro(codes),
-            }
+            InputResult::None
         }
     }
 }

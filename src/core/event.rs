@@ -2,6 +2,10 @@ use evdev::{EventType, InputEvent};
 
 use crate::config::schema::{KeyAction, KeyCode};
 
+pub const PRESS_EVENT: i32 = 1;
+pub const HOLD_EVENT: i32 = 2;
+pub const RELEASE_EVENT: i32 = 0;
+
 pub trait IntoInputEvent {
     fn to_event(&self, value: i32) -> InputEvent;
 }

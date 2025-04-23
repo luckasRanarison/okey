@@ -1,5 +1,3 @@
-// use std::{collections::HashMap, time::Instant};
-
 use anyhow::Result;
 use evdev::{InputEvent, uinput::VirtualDevice};
 
@@ -10,17 +8,17 @@ use crate::config::{
 
 use super::{
     combo::ComboManager,
-    event::{IntoInputEvent, IntoInputEvents},
+    event::{HOLD_EVENT, IntoInputEvent, IntoInputEvents, PRESS_EVENT, RELEASE_EVENT},
     tap_dance::TapDanceManager,
 };
 
 #[derive(Debug)]
 pub enum InputResult {
-    KeyCode { code: KeyCode, value: i32 },
-    KeyPress(KeyCode),
-    KeyHold(KeyCode),
-    KeyRelease(KeyCode),
-    KeyMacro(Vec<KeyCode>),
+    Press(KeyCode),
+    Hold(KeyCode),
+    Release(KeyCode),
+    Macro(Vec<KeyCode>),
+    DoubleSequence { code: KeyCode, events: [i32; 2] },
     None,
 }
 
@@ -57,9 +55,10 @@ impl KeyManager {
         let value = event.value();
 
         let result = match value {
-            1 => self.handle_press(code),
-            2 => self.handle_hold(code),
-            _ => self.handle_release(code),
+            PRESS_EVENT => self.handle_press(code),
+            HOLD_EVENT => self.handle_hold(code),
+            RELEASE_EVENT => self.handle_release(code),
+            _ => unreachable!(),
         };
 
         self.dispatch_result(result, virtual_device)
@@ -72,8 +71,11 @@ impl KeyManager {
             }
         }
 
-        self.combo_manager
-            .process(|action| Ok(virtual_device.emit(&action.to_events())?))?;
+        if let Some(results) = self.combo_manager.process() {
+            for result in results {
+                self.dispatch_result(result, virtual_device)?;
+            }
+        }
 
         Ok(())
     }
@@ -84,20 +86,20 @@ impl KeyManager {
         virtual_device: &mut VirtualDevice,
     ) -> Result<()> {
         match result {
-            InputResult::KeyCode { code, value } => {
-                virtual_device.emit(&[code.to_event(value)])?;
+            InputResult::Press(code) => {
+                virtual_device.emit(&[code.to_event(PRESS_EVENT)])?;
             }
-            InputResult::KeyPress(code) => {
-                virtual_device.emit(&[code.to_event(1), code.to_event(0)])?;
+            InputResult::Hold(code) => {
+                virtual_device.emit(&[code.to_event(HOLD_EVENT)])?;
             }
-            InputResult::KeyHold(code) => {
-                virtual_device.emit(&[code.to_event(1), code.to_event(2)])?;
+            InputResult::Release(code) => {
+                virtual_device.emit(&[code.to_event(RELEASE_EVENT)])?;
             }
-            InputResult::KeyRelease(code) => {
-                virtual_device.emit(&[code.to_event(0)])?;
-            }
-            InputResult::KeyMacro(codes) => {
+            InputResult::Macro(codes) => {
                 virtual_device.emit(&codes.to_events())?;
+            }
+            InputResult::DoubleSequence { code, events } => {
+                virtual_device.emit(&events.map(|e| code.to_event(e)))?;
             }
             InputResult::None => {}
         }
@@ -112,21 +114,16 @@ impl KeyManager {
 
                 self.tap_dance_manager
                     .handle_press(value)
-                    .unwrap_or(InputResult::KeyCode { code, value: 1 })
+                    .or_else(|| self.combo_manager.handle_press(value))
+                    .unwrap_or(InputResult::Press(code))
             }
-            KeyAction::Macro(codes) => InputResult::KeyMacro(codes),
+            KeyAction::Macro(codes) => InputResult::Macro(codes),
         }
     }
 
     fn handle_hold(&mut self, action: KeyAction) -> InputResult {
         match action {
-            KeyAction::KeyCode(code) => {
-                let value = code.value();
-
-                self.tap_dance_manager
-                    .handle_hold(value)
-                    .unwrap_or(InputResult::KeyCode { code, value: 2 })
-            }
+            KeyAction::KeyCode(code) => InputResult::Hold(code),
             KeyAction::Macro(_) => InputResult::None,
         }
     }
@@ -138,7 +135,8 @@ impl KeyManager {
 
                 self.tap_dance_manager
                     .handle_release(value)
-                    .unwrap_or(InputResult::KeyCode { code, value: 0 })
+                    .or_else(|| self.combo_manager.handle_release(value))
+                    .unwrap_or(InputResult::Release(code))
             }
             _ => InputResult::None,
         }

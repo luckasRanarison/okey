@@ -3,9 +3,9 @@ use std::{
     time::Instant,
 };
 
-use anyhow::Result;
-
 use crate::config::schema::{ComboConfig, ComboDefinition, KeyAction};
+
+use super::manager::InputResult;
 
 #[derive(Debug)]
 pub struct ComboManager {
@@ -33,23 +33,20 @@ impl ComboManager {
         }
     }
 
-    pub fn handle_press(&mut self, code: u16) -> bool {
-        false
+    pub fn handle_press(&mut self, _code: u16) -> Option<InputResult> {
+        None
     }
 
-    pub fn handle_release(&mut self, code: u16) -> bool {
-        false
+    pub fn handle_release(&mut self, _code: u16) -> Option<InputResult> {
+        None
     }
 
-    pub fn process<F>(&mut self, mut hanle_action: F) -> Result<()>
-    where
-        F: FnMut(&KeyAction) -> Result<()>,
-    {
+    pub fn process(&mut self) -> Option<Vec<InputResult>> {
         if !self.defintions.is_empty() {
             //
         }
 
-        Ok(())
+        None
     }
 }
 
