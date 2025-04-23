@@ -62,7 +62,7 @@ impl TapDanceManager {
         let mut results = Vec::new();
         let mut processed = Vec::new();
 
-        for (idx, state) in self.pressed_keys.iter().enumerate() {
+        for (idx, state) in self.pressed_keys.iter_mut().enumerate() {
             let result = state.get_dance_result(now);
 
             results.push(result);
@@ -102,7 +102,7 @@ impl PressedKey {
         }
     }
 
-    fn get_dance_result(&self, now: Instant) -> InputResult {
+    fn get_dance_result(&mut self, now: Instant) -> InputResult {
         let elapsed = now.duration_since(self.timestamp).as_millis();
         let timeout = self.timeout as u128;
 
@@ -127,7 +127,10 @@ impl PressedKey {
                     code: code.clone(),
                     events: [PRESS_EVENT, HOLD_EVENT],
                 },
-                KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
+                KeyAction::Macro(codes) => {
+                    self.released = true; // prevent macros from repeating
+                    InputResult::Macro(codes.clone())
+                }
             }
         } else {
             InputResult::None

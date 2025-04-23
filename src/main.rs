@@ -20,8 +20,6 @@ fn main() -> Result<()> {
             for keyboard in parsed.keyboards {
                 let defaults = parsed.defaults.clone();
 
-                println!("{defaults:?}");
-
                 let handle = thread::spawn(|| -> Result<()> {
                     let device = find_device_by_name(&keyboard.name)?;
 

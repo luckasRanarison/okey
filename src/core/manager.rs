@@ -123,7 +123,13 @@ impl KeyManager {
 
     fn handle_hold(&mut self, action: KeyAction) -> InputResult {
         match action {
-            KeyAction::KeyCode(code) => InputResult::Hold(code),
+            KeyAction::KeyCode(code) => {
+                let value = code.value();
+
+                self.combo_manager
+                    .handle_hold(value)
+                    .unwrap_or(InputResult::Hold(code))
+            }
             KeyAction::Macro(_) => InputResult::None,
         }
     }

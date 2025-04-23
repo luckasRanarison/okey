@@ -1,4 +1,4 @@
-pub const COMBO_THRESHOLD: u16 = 75;
+pub const COMBO_THRESHOLD: u16 = 50;
 pub const TAP_DANCE_TIMEOUT: u16 = 200;
 
 pub fn combo_threshold() -> u16 {
