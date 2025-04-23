@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::config::schema::KeyAction;
+use crate::config::schema::{KeyAction, KeyCode};
 
 #[derive(Debug)]
 pub struct PressedKey {
@@ -11,6 +11,34 @@ pub struct PressedKey {
     pub result: PressedKeyResult,
 }
 
+impl PressedKey {
+    pub fn get_dance_action(&self, now: Instant) -> Option<&KeyAction> {
+        let elapsed = now.duration_since(self.timestamp).as_millis();
+
+        if elapsed > self.timeout as u128 {
+            self.to_hold()
+        } else if self.released {
+            self.to_tap()
+        } else {
+            None
+        }
+    }
+
+    fn to_tap(&self) -> Option<&KeyAction> {
+        match &self.result {
+            PressedKeyResult::TapDance { tap, .. } => Some(tap),
+            PressedKeyResult::Combo => None,
+        }
+    }
+
+    fn to_hold(&self) -> Option<&KeyAction> {
+        match &self.result {
+            PressedKeyResult::TapDance { hold, .. } => Some(hold),
+            PressedKeyResult::Combo => None,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum PressedKeyResult {
     TapDance { tap: KeyAction, hold: KeyAction },
@@ -19,8 +47,7 @@ pub enum PressedKeyResult {
 
 #[derive(Debug)]
 pub enum KeyResult {
-    KeyAction(KeyAction),
-    KeyPressed(PressedKey),
-    Layer,
+    KeyCode(KeyCode),
+    KeyMacro(Vec<KeyCode>),
     None,
 }

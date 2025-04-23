@@ -3,7 +3,7 @@
 use std::time::Instant;
 
 use anyhow::Result;
-use evdev::{uinput::VirtualDevice, EventType, InputEvent};
+use evdev::{EventType, InputEvent, uinput::VirtualDevice};
 
 use crate::config::{
     schema::{KeyAction, KeyboardConfig, LayerConfig},
@@ -11,7 +11,7 @@ use crate::config::{
 };
 
 use super::{
-    event::IntoInputEvent,
+    event::{IntoInputEvent, IntoInputEvents},
     key::{KeyResult, PressedKey, PressedKeyResult},
 };
 
@@ -42,10 +42,6 @@ impl KeyManager {
         event: InputEvent,
         virtual_device: &mut VirtualDevice,
     ) -> Result<()> {
-        if event.event_type() != EventType::KEY {
-            return Ok(());
-        }
-
         let code = self.mappings.map(&event.code());
         // let code = self.layer_manager.map(&code);
         let value = event.value();
@@ -56,22 +52,10 @@ impl KeyManager {
             _ => self.handle_release(code),
         };
 
-        match result {
-            KeyResult::KeyAction(action) => {
-                virtual_device.emit(&action.to_events())?;
-            }
-            KeyResult::KeyPressed(state) => {
-                self.pressed_keys.push(state);
-            }
-
-            KeyResult::Layer => {}
-            KeyResult::None => {}
-        }
-
-        Ok(())
+        self.dispatch_result(result, value, virtual_device)
     }
 
-    pub fn next(&mut self, virtual_device: &mut VirtualDevice) -> Result<()> {
+    pub fn post_process(&mut self, virtual_device: &mut VirtualDevice) -> Result<()> {
         if self.pressed_keys.is_empty() {
             return Ok(());
         }
@@ -80,19 +64,8 @@ impl KeyManager {
         let mut processed = Vec::new();
 
         for (idx, state) in self.pressed_keys.iter().enumerate() {
-            let elapsed = now.duration_since(state.timestamp).as_millis();
-
-            if elapsed > state.timeout as u128 {
-                if let PressedKeyResult::TapDance { hold, .. } = &state.result {
-                    virtual_device.emit(&hold.to_events())?;
-                }
-
-                processed.push(idx);
-            } else if state.released {
-                if let PressedKeyResult::TapDance { tap, .. } = &state.result {
-                    virtual_device.emit(&tap.to_events())?;
-                }
-
+            if let Some(result) = state.get_dance_action(now) {
+                virtual_device.emit(&result.to_events())?;
                 processed.push(idx);
             }
         }
@@ -104,46 +77,73 @@ impl KeyManager {
         Ok(())
     }
 
-    fn handle_press(&mut self, action: KeyAction) -> KeyResult {
-        if let KeyAction::KeyCode(code) = &action {
-            let code = code.value();
-
-            if let Some(config) = self.tap_dances.get(&code) {
-                return KeyResult::KeyPressed(PressedKey {
-                    code,
-                    timeout: config.timeout,
-                    timestamp: Instant::now(),
-                    released: false,
-                    result: PressedKeyResult::TapDance {
-                        tap: config.tap.clone(),
-                        hold: config.hold.clone(),
-                    },
-                });
+    fn dispatch_result(
+        &mut self,
+        result: KeyResult,
+        event_value: i32,
+        virtual_device: &mut VirtualDevice,
+    ) -> Result<()> {
+        match result {
+            KeyResult::KeyCode(code) => {
+                virtual_device.emit(&[code.to_event(event_value)])?;
             }
+            KeyResult::KeyMacro(codes) => {
+                virtual_device.emit(&codes.to_events())?;
+            }
+            KeyResult::None => {}
         }
 
-        KeyResult::KeyAction(action)
+        Ok(())
+    }
+
+    fn handle_press(&mut self, action: KeyAction) -> KeyResult {
+        match action {
+            KeyAction::KeyCode(code) => {
+                let value = code.value();
+
+                if let Some(config) = self.tap_dances.get(&value) {
+                    let key = PressedKey {
+                        code: value,
+                        timeout: config.timeout,
+                        timestamp: Instant::now(),
+                        released: false,
+                        result: PressedKeyResult::TapDance {
+                            tap: config.tap.clone(),
+                            hold: config.hold.clone(),
+                        },
+                    };
+
+                    self.pressed_keys.push(key);
+
+                    KeyResult::None
+                } else {
+                    KeyResult::KeyCode(code)
+                }
+            }
+            KeyAction::Macro(codes) => KeyResult::KeyMacro(codes),
+        }
     }
 
     fn handle_hold(&mut self, action: KeyAction) -> KeyResult {
-        match &action {
-            KeyAction::KeyCode(_) => KeyResult::KeyAction(action),
+        match action {
+            KeyAction::KeyCode(code) => KeyResult::KeyCode(code),
             KeyAction::Macro(_) => KeyResult::None,
         }
     }
 
     fn handle_release(&mut self, action: KeyAction) -> KeyResult {
-        if let KeyAction::KeyCode(keycode) = &action {
-            let value = keycode.value();
+        match action {
+            KeyAction::KeyCode(code) => {
+                let value = code.value();
 
-            if let Some(state) = self.pressed_keys.iter_mut().find(|s| s.code == value) {
-                state.released = true;
-                KeyResult::None
-            } else {
-                KeyResult::KeyAction(action)
+                if let Some(state) = self.pressed_keys.iter_mut().find(|s| s.code == value) {
+                    state.released = true;
+                    KeyResult::None
+                } else {
+                    KeyResult::KeyCode(code)
+                }
             }
-        } else {
-            KeyResult::None
+            _ => KeyResult::None,
         }
     }
 }

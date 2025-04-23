@@ -1,5 +1,5 @@
 use anyhow::Result;
-use evdev::{Device, uinput::VirtualDevice};
+use evdev::{Device, EventType, uinput::VirtualDevice};
 use nix::sys::epoll::{Epoll, EpollCreateFlags, EpollEvent, EpollFlags};
 
 use crate::config::schema::KeyboardConfig;
@@ -44,11 +44,13 @@ impl EventHandler {
 
             if let Ok(events) = self.device.fetch_events() {
                 for event in events {
-                    self.key_manager.process_event(event, &mut virtual_device)?;
+                    if event.event_type() == EventType::KEY {
+                        self.key_manager.process_event(event, &mut virtual_device)?;
+                    }
                 }
             }
 
-            self.key_manager.next(&mut virtual_device)?;
+            self.key_manager.post_process(&mut virtual_device)?;
         }
     }
 }
