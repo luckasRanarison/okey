@@ -3,7 +3,10 @@ use std::{
     time::Instant,
 };
 
-use crate::config::schema::{DefaultTapDanceConfig, KeyAction, KeyCode, TapDanceConfig};
+use crate::{
+    config::schema::{DefaultTapDanceConfig, KeyAction, KeyCode, TapDanceConfig},
+    core::buffer::InputBuffer,
+};
 
 use super::manager::InputResult;
 
@@ -28,8 +31,8 @@ impl TapDanceManager {
         Self {
             config,
             tap_dances,
-            pressed_keys: Vec::new(),
-            supressed_keys: HashSet::new(),
+            pressed_keys: Vec::with_capacity(5),
+            supressed_keys: HashSet::with_capacity(3),
         }
     }
 
@@ -63,14 +66,12 @@ impl TapDanceManager {
         }
     }
 
-    pub fn process(&mut self) -> Option<Vec<InputResult>> {
+    pub fn process(&mut self, buffer: &mut InputBuffer) {
         if self.pressed_keys.is_empty() {
-            return None;
+            return;
         }
 
         let now = Instant::now();
-        let mut results = Vec::new();
-        let mut processed = Vec::new();
 
         for (idx, state) in self.pressed_keys.iter().enumerate() {
             if self.supressed_keys.contains(&state.code) {
@@ -83,18 +84,16 @@ impl TapDanceManager {
                 self.supressed_keys.insert(state.code);
             }
 
-            results.push(result);
+            buffer.push_result(result);
 
             if state.released {
-                processed.push(idx);
+                buffer.push_key(idx as u16);
             }
         }
 
-        for &idx in processed.iter().rev() {
-            self.pressed_keys.remove(idx);
+        while let Some(idx) = buffer.pop_key() {
+            self.pressed_keys.remove(idx as usize);
         }
-
-        Some(results)
     }
 }
 

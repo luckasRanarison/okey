@@ -6,6 +6,7 @@ use crate::config::schema::{
 };
 
 use super::{
+    buffer::InputBuffer,
     combo::ComboManager,
     event::{
         EventEmitter, HOLD_EVENT, IntoInputEvent, IntoInputEvents, PRESS_EVENT, RELEASE_EVENT,
@@ -29,6 +30,7 @@ pub struct KeyManager {
     mapping_manager: MappingManager,
     combo_manager: ComboManager,
     tap_dance_manager: TapDanceManager,
+    buffer: InputBuffer,
     // layer_manager: LayerManager,
 }
 
@@ -43,6 +45,7 @@ impl KeyManager {
             mapping_manager,
             tap_dance_manager,
             combo_manager,
+            buffer: InputBuffer::default(),
             // layer_manager,
         }
     }
@@ -67,16 +70,11 @@ impl KeyManager {
     }
 
     pub fn post_process<E: EventEmitter>(&mut self, emitter: &mut E) -> Result<()> {
-        if let Some(results) = self.tap_dance_manager.process() {
-            for result in results {
-                self.dispatch_result(&result, emitter)?;
-            }
-        }
+        self.tap_dance_manager.process(&mut self.buffer);
+        self.combo_manager.process(&mut self.buffer);
 
-        if let Some(results) = self.combo_manager.process() {
-            for result in results {
-                self.dispatch_result(&result, emitter)?;
-            }
+        while let Some(result) = self.buffer.pop_result() {
+            self.dispatch_result(&result, emitter)?;
         }
 
         Ok(())

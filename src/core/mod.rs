@@ -1,3 +1,4 @@
+mod buffer;
 mod combo;
 mod event;
 mod manager;

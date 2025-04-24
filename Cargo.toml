@@ -15,5 +15,6 @@ anyhow = "1.0.98"
 clap = { version = "4.5.37", features = ["derive"] }
 evdev = "0.13.1"
 nix = "0.29.0"
+ringbuffer = "0.15.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"

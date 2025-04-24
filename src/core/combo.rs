@@ -3,7 +3,10 @@ use std::{
     time::Instant,
 };
 
-use crate::config::schema::{ComboConfig, ComboDefinition, DefaultComboConfig, KeyAction, KeyCode};
+use crate::{
+    config::schema::{ComboConfig, ComboDefinition, DefaultComboConfig, KeyAction, KeyCode},
+    core::buffer::InputBuffer,
+};
 
 use super::manager::InputResult;
 
@@ -33,9 +36,9 @@ impl ComboManager {
             config,
             key_set,
             definitions,
-            pressed_keys: HashMap::new(),
-            supressed_keys: HashSet::new(),
-            active_combos: Vec::new(),
+            pressed_keys: HashMap::with_capacity(8),
+            supressed_keys: HashSet::with_capacity(3),
+            active_combos: Vec::with_capacity(3),
         }
     }
 
@@ -71,28 +74,23 @@ impl ComboManager {
         }
     }
 
-    pub fn process(&mut self) -> Option<Vec<InputResult>> {
+    pub fn process(&mut self, buffer: &mut InputBuffer) {
         if self.definitions.is_empty() {
-            return None;
+            return;
         }
 
-        let mut results = Vec::new();
-
-        self.process_key_results(&mut results); // keys that exceeded threshold
-        self.process_active_combos(&mut results);
-        self.process_combo_trigger(&mut results);
-
-        Some(results)
+        self.process_key_results(buffer); // keys that exceeded threshold
+        self.process_active_combos(buffer);
+        self.process_combo_trigger(buffer);
     }
 
-    fn process_key_results(&mut self, results: &mut Vec<InputResult>) {
+    fn process_key_results(&mut self, buffer: &mut InputBuffer) {
         let now = Instant::now();
         let threshold = self.config.default_threshold;
-        let mut processed = Vec::new();
 
         for (&code, key) in &self.pressed_keys {
             if key.released {
-                processed.push(code);
+                buffer.push_key(code);
             }
 
             if self.supressed_keys.contains(&code) {
@@ -102,47 +100,45 @@ impl ComboManager {
             if let Some(result) = key.get_key_result(code, now, threshold) {
                 // Hold event, pass control back to the main handler
                 if let InputResult::Press(_) = &result {
-                    processed.push(code);
+                    buffer.push_key(code);
                 }
 
-                results.push(result);
+                buffer.push_result(result);
             }
         }
 
-        for code in processed.iter().rev() {
-            self.pressed_keys.remove(code);
+        while let Some(code) = buffer.pop_key() {
+            self.pressed_keys.remove(&code);
         }
     }
 
-    fn process_active_combos(&mut self, results: &mut Vec<InputResult>) {
-        let mut processed_combos = Vec::new();
-
+    fn process_active_combos(&mut self, buffer: &mut InputBuffer) {
         for (idx, combo) in self.active_combos.iter().enumerate() {
             let pressed_key = self.get_pressed_combo_key(combo);
 
             if let Some((key, code)) = pressed_key.zip(combo.code) {
                 if key.hold {
-                    results.push(InputResult::Hold(KeyCode::new(code)));
+                    buffer.push_result(InputResult::Hold(KeyCode::new(code)));
                 }
             } else {
                 if let Some(code) = combo.code {
-                    results.push(InputResult::Release(KeyCode::new(code)));
+                    buffer.push_result(InputResult::Release(KeyCode::new(code)));
                 }
 
                 for key in &combo.keys {
                     self.supressed_keys.remove(&key.value());
                 }
 
-                processed_combos.push(idx);
+                buffer.push_key(idx as u16);
             }
         }
 
-        for &idx in processed_combos.iter().rev() {
-            self.active_combos.remove(idx);
+        while let Some(idx) = buffer.pop_key() {
+            self.active_combos.remove(idx as usize);
         }
     }
 
-    fn process_combo_trigger(&mut self, results: &mut Vec<InputResult>) {
+    fn process_combo_trigger(&mut self, buffer: &mut InputBuffer) {
         for combo in &self.definitions {
             if !self.should_activate_combo(combo) || self.is_combo_supressed(combo) {
                 continue;
@@ -159,7 +155,7 @@ impl ComboManager {
             self.active_combos
                 .push(ActiveCombo::new(code, combo.keys.clone()));
 
-            results.push(result);
+            buffer.push_result(result);
         }
     }
 
