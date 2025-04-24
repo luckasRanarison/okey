@@ -118,15 +118,11 @@ impl ComboManager {
         let mut processed_combos = Vec::new();
 
         for (idx, combo) in self.active_combos.iter().enumerate() {
-            if let Some(key) = combo
-                .keys
-                .iter()
-                .find_map(|key| self.pressed_keys.get(&key.value()))
-            {
-                if let Some(code) = combo.code {
-                    if key.hold {
-                        results.push(InputResult::Hold(KeyCode::new(code)));
-                    }
+            let pressed_key = self.get_pressed_combo_key(combo);
+
+            if let Some((key, code)) = pressed_key.zip(combo.code) {
+                if key.hold {
+                    results.push(InputResult::Hold(KeyCode::new(code)));
                 }
             } else {
                 if let Some(code) = combo.code {
@@ -148,40 +144,45 @@ impl ComboManager {
 
     fn process_combo_trigger(&mut self, results: &mut Vec<InputResult>) {
         for combo in &self.definitions {
-            let is_active = combo
-                .keys
-                .iter()
-                .any(|k| self.supressed_keys.contains(&k.value()));
-
-            if is_active {
+            if !self.should_activate_combo(combo) || self.is_combo_supressed(combo) {
                 continue;
             }
 
-            let should_activate = combo.keys.iter().all(|key| {
-                self.pressed_keys
-                    .get(&key.value())
-                    .is_some_and(|value| !value.hold)
-            });
+            self.supressed_keys
+                .extend(combo.keys.iter().map(|key| key.value()));
 
-            if should_activate {
-                self.supressed_keys
-                    .extend(combo.keys.iter().map(|key| key.value()));
+            let (code, result) = match &combo.action {
+                KeyAction::KeyCode(code) => (Some(code.value()), InputResult::Press(code.clone())),
+                KeyAction::Macro(codes) => (None, InputResult::Macro(codes.clone())),
+            };
 
-                let (code, result) = match &combo.action {
-                    KeyAction::KeyCode(code) => {
-                        (Some(code.value()), InputResult::Press(code.clone()))
-                    }
-                    KeyAction::Macro(codes) => (None, InputResult::Macro(codes.clone())),
-                };
+            self.active_combos
+                .push(ActiveCombo::new(code, combo.keys.clone()));
 
-                self.active_combos.push(ActiveCombo {
-                    code,
-                    keys: combo.keys.clone(),
-                });
-
-                results.push(result);
-            }
+            results.push(result);
         }
+    }
+
+    fn get_pressed_combo_key(&self, combo: &ActiveCombo) -> Option<&ComboKey> {
+        combo
+            .keys
+            .iter()
+            .find_map(|key| self.pressed_keys.get(&key.value()))
+    }
+
+    fn is_combo_supressed(&self, combo: &ComboDefinition) -> bool {
+        combo
+            .keys
+            .iter()
+            .any(|k| self.supressed_keys.contains(&k.value()))
+    }
+
+    fn should_activate_combo(&self, combo: &ComboDefinition) -> bool {
+        combo.keys.iter().all(|key| {
+            self.pressed_keys
+                .get(&key.value())
+                .is_some_and(|value| !value.hold)
+        })
     }
 }
 
@@ -231,4 +232,10 @@ impl ComboKey {
 struct ActiveCombo {
     code: Option<u16>,
     keys: Vec<KeyCode>,
+}
+
+impl ActiveCombo {
+    fn new(code: Option<u16>, keys: Vec<KeyCode>) -> Self {
+        Self { code, keys }
+    }
 }

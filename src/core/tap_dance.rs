@@ -1,4 +1,7 @@
-use std::{collections::HashMap, time::Instant};
+use std::{
+    collections::{HashMap, HashSet},
+    time::Instant,
+};
 
 use crate::config::schema::{DefaultTapDanceConfig, KeyAction, KeyCode, TapDanceConfig};
 
@@ -8,6 +11,7 @@ use super::manager::InputResult;
 pub struct TapDanceManager {
     tap_dances: HashMap<u16, TapDanceConfig>,
     pressed_keys: Vec<PressedKey>,
+    supressed_keys: HashSet<u16>,
     config: DefaultTapDanceConfig,
 }
 
@@ -25,6 +29,7 @@ impl TapDanceManager {
             config,
             tap_dances,
             pressed_keys: Vec::new(),
+            supressed_keys: HashSet::new(),
         }
     }
 
@@ -40,11 +45,15 @@ impl TapDanceManager {
     }
 
     pub fn handle_hold(&mut self, code: u16) -> Option<InputResult> {
-        self.tap_dances.get(&code).map(|_| InputResult::None)
+        self.tap_dances
+            .contains_key(&code)
+            .then_some(InputResult::None)
     }
 
     pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|s| s.code == code);
+
+        self.supressed_keys.remove(&code);
 
         if let Some(key) = key {
             key.released = true;
@@ -63,8 +72,16 @@ impl TapDanceManager {
         let mut results = Vec::new();
         let mut processed = Vec::new();
 
-        for (idx, state) in self.pressed_keys.iter_mut().enumerate() {
+        for (idx, state) in self.pressed_keys.iter().enumerate() {
+            if self.supressed_keys.contains(&state.code) {
+                continue;
+            }
+
             let result = state.get_dance_result(now);
+
+            if let InputResult::Macro(_) = &result {
+                self.supressed_keys.insert(state.code);
+            }
 
             results.push(result);
 
@@ -103,38 +120,45 @@ impl PressedKey {
         }
     }
 
-    fn get_dance_result(&mut self, now: Instant) -> InputResult {
+    fn get_dance_result(&self, now: Instant) -> InputResult {
         let elapsed = now.duration_since(self.timestamp).as_millis();
         let timeout = self.timeout as u128;
 
-        if self.released {
-            if elapsed > timeout {
-                match &self.hold {
-                    KeyAction::KeyCode(code) => InputResult::Release(code.clone()),
-                    KeyAction::Macro(_) => InputResult::None,
-                }
-            } else {
-                match &self.tap {
-                    KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
-                        InputResult::Press(code.clone()),
-                        InputResult::Release(code.clone()),
-                    ])),
-                    KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
-                }
-            }
+        if self.released && elapsed > timeout {
+            self.get_release_result()
+        } else if self.released {
+            self.get_tap_result()
         } else if elapsed > timeout {
-            match &self.hold {
-                KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
-                    InputResult::Press(code.clone()),
-                    InputResult::Hold(code.clone()),
-                ])),
-                KeyAction::Macro(codes) => {
-                    self.released = true; // prevent macros from repeating
-                    InputResult::Macro(codes.clone())
-                }
-            }
+            self.get_hold_resut()
         } else {
             InputResult::None
+        }
+    }
+
+    fn get_release_result(&self) -> InputResult {
+        match &self.hold {
+            KeyAction::KeyCode(code) => InputResult::Release(code.clone()),
+            KeyAction::Macro(_) => InputResult::None,
+        }
+    }
+
+    fn get_tap_result(&self) -> InputResult {
+        match &self.tap {
+            KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
+                InputResult::Press(code.clone()),
+                InputResult::Release(code.clone()),
+            ])),
+            KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
+        }
+    }
+
+    fn get_hold_resut(&self) -> InputResult {
+        match &self.hold {
+            KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
+                InputResult::Press(code.clone()),
+                InputResult::Hold(code.clone()),
+            ])),
+            KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
         }
     }
 }
