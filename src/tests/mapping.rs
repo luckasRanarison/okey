@@ -1,3 +1,5 @@
+use std::{thread, time::Duration};
+
 use anyhow::Result;
 use evdev::KeyCode;
 
@@ -55,6 +57,37 @@ fn test_macro_key() -> Result<()> {
     manager.process(release(KeyCode::KEY_B), &mut emitter)?;
 
     // macros should not repeat on hold
+    assert_eq!(emitter.queue(), &expected);
+
+    Ok(())
+}
+
+#[test]
+fn test_custom_code() -> Result<()> {
+    let mut emitter = FakeEventEmitter::default();
+    let mut manager = get_test_manager();
+
+    manager.process(press(KeyCode::KEY_Z), &mut emitter)?;
+    manager.process(release(KeyCode::KEY_Z), &mut emitter)?;
+
+    let expected = vec![press(KeyCode::KEY_Z), release(KeyCode::KEY_Z)];
+
+    assert_eq!(emitter.queue(), &expected);
+
+    emitter.clear();
+
+    manager.process(press(KeyCode::KEY_Z), &mut emitter)?;
+    manager.process_event(hold(KeyCode::KEY_Z), &mut emitter)?;
+    thread::sleep(Duration::from_millis(250));
+    manager.post_process(&mut emitter)?;
+    manager.process(release(KeyCode::KEY_Z), &mut emitter)?;
+
+    let expected = vec![
+        press(KeyCode::KEY_LEFTSHIFT),
+        hold(KeyCode::KEY_LEFTSHIFT),
+        release(KeyCode::KEY_LEFTSHIFT),
+    ];
+
     assert_eq!(emitter.queue(), &expected);
 
     Ok(())

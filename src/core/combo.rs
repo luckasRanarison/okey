@@ -5,10 +5,7 @@ use std::{
 
 use crate::config::schema::{ComboConfig, ComboDefinition, DefaultComboConfig, KeyAction, KeyCode};
 
-use super::{
-    event::{PRESS_EVENT, RELEASE_EVENT},
-    manager::InputResult,
-};
+use super::manager::InputResult;
 
 #[derive(Debug)]
 pub struct ComboManager {
@@ -215,10 +212,10 @@ impl ComboKey {
             let result = if self.hold {
                 InputResult::Release(KeyCode::new(code))
             } else {
-                InputResult::DoubleSequence {
-                    code: KeyCode::new(code),
-                    events: [PRESS_EVENT, RELEASE_EVENT],
-                }
+                InputResult::DoubleSequence(Box::new([
+                    InputResult::Press(KeyCode::new(code)),
+                    InputResult::Release(KeyCode::new(code)),
+                ]))
             };
 
             return Some(result);

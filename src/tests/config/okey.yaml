@@ -10,6 +10,7 @@ keyboards:
     keys:
       KEY_Q: KEY_W
       KEY_B: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
+      KEY_Z: KEY_CUSTOM
 
     combos:
       - keys: [KEY_D, KEY_F]
@@ -26,6 +27,10 @@ keyboards:
       KEY_H:
         tap: [KEY_H, KEY_I]
         hold: [KEY_H, KEY_E, KEY_Y]
+
+      KEY_CUSTOM:
+        tap: KEY_Z
+        hold: KEY_LEFTSHIFT
 
     layers:
       my_layer:

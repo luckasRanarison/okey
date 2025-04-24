@@ -2,10 +2,7 @@ use std::{collections::HashMap, time::Instant};
 
 use crate::config::schema::{DefaultTapDanceConfig, KeyAction, KeyCode, TapDanceConfig};
 
-use super::{
-    event::{HOLD_EVENT, PRESS_EVENT, RELEASE_EVENT},
-    manager::InputResult,
-};
+use super::manager::InputResult;
 
 #[derive(Debug)]
 pub struct TapDanceManager {
@@ -118,19 +115,19 @@ impl PressedKey {
                 }
             } else {
                 match &self.tap {
-                    KeyAction::KeyCode(code) => InputResult::DoubleSequence {
-                        code: code.clone(),
-                        events: [PRESS_EVENT, RELEASE_EVENT],
-                    },
+                    KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
+                        InputResult::Press(code.clone()),
+                        InputResult::Release(code.clone()),
+                    ])),
                     KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
                 }
             }
         } else if elapsed > timeout {
             match &self.hold {
-                KeyAction::KeyCode(code) => InputResult::DoubleSequence {
-                    code: code.clone(),
-                    events: [PRESS_EVENT, HOLD_EVENT],
-                },
+                KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
+                    InputResult::Press(code.clone()),
+                    InputResult::Hold(code.clone()),
+                ])),
                 KeyAction::Macro(codes) => {
                     self.released = true; // prevent macros from repeating
                     InputResult::Macro(codes.clone())

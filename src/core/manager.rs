@@ -1,7 +1,9 @@
 use anyhow::Result;
 use evdev::InputEvent;
 
-use crate::config::schema::{DefaultConfig, KeyAction, KeyCode, KeyboardConfig};
+use crate::config::schema::{
+    DefaultConfig, KeyAction, KeyCode, KeyboardConfig, SAFE_KEYCODE_START,
+};
 
 use super::{
     combo::ComboManager,
@@ -18,7 +20,7 @@ pub enum InputResult {
     Hold(KeyCode),
     Release(KeyCode),
     Macro(Vec<KeyCode>),
-    DoubleSequence { code: KeyCode, events: [i32; 2] },
+    DoubleSequence(Box<[InputResult; 2]>),
     None,
 }
 
@@ -61,35 +63,63 @@ impl KeyManager {
             _ => unreachable!(),
         };
 
-        self.dispatch_result(result, emitter)
+        self.dispatch_result(&result, emitter)
     }
 
     pub fn post_process<E: EventEmitter>(&mut self, emitter: &mut E) -> Result<()> {
         if let Some(results) = self.tap_dance_manager.process() {
             for result in results {
-                self.dispatch_result(result, emitter)?;
+                self.dispatch_result(&result, emitter)?;
             }
         }
 
         if let Some(results) = self.combo_manager.process() {
             for result in results {
-                self.dispatch_result(result, emitter)?;
+                self.dispatch_result(&result, emitter)?;
             }
         }
 
         Ok(())
     }
 
-    fn dispatch_result<E: EventEmitter>(&self, result: InputResult, emitter: &mut E) -> Result<()> {
+    fn dispatch_result<E: EventEmitter>(
+        &mut self,
+        result: &InputResult,
+        emitter: &mut E,
+    ) -> Result<()> {
         match result {
-            InputResult::Press(code) => emitter.emit(&[code.to_event(PRESS_EVENT)]),
-            InputResult::Hold(code) => emitter.emit(&[code.to_event(HOLD_EVENT)]),
-            InputResult::Release(code) => emitter.emit(&[code.to_event(RELEASE_EVENT)]),
-            InputResult::Macro(codes) => emitter.emit(&codes.to_events()),
-            InputResult::DoubleSequence { code, events } => {
-                emitter.emit(&events.map(|e| code.to_event(e)))
+            InputResult::Press(code) | InputResult::Hold(code) | InputResult::Release(code) => {
+                self.dispatch_event_result(result, code.clone(), emitter)
             }
+            InputResult::DoubleSequence(results) => {
+                let [first, second] = results.as_ref();
+                self.dispatch_result(first, emitter)?;
+                self.dispatch_result(second, emitter)
+            }
+            InputResult::Macro(codes) => emitter.emit(&codes.to_events()),
             InputResult::None => Ok(()),
+        }
+    }
+
+    fn dispatch_event_result<E: EventEmitter>(
+        &mut self,
+        result: &InputResult,
+        code: KeyCode,
+        emitter: &mut E,
+    ) -> Result<()> {
+        let (event_kind, handler): (_, fn(&mut Self, KeyAction) -> InputResult) = match result {
+            InputResult::Press(_) => (PRESS_EVENT, Self::handle_press),
+            InputResult::Hold(_) => (HOLD_EVENT, Self::handle_hold),
+            InputResult::Release(_) => (RELEASE_EVENT, Self::handle_release),
+            _ => unreachable!(),
+        };
+
+        if code.value() >= SAFE_KEYCODE_START {
+            let action = KeyAction::KeyCode(code);
+            let result = handler(self, action);
+            self.dispatch_result(&result, emitter)
+        } else {
+            emitter.emit(&[code.to_event(event_kind)])
         }
     }
 
