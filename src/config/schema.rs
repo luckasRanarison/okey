@@ -70,7 +70,7 @@ pub struct KeyboardConfig {
     #[serde(default)]
     pub tap_dances: HashMap<KeyCode, TapDanceConfig>,
     #[serde(default)]
-    pub layers: LayerConfig,
+    pub layers: HashMap<String, LayerDefinition>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -88,9 +88,6 @@ pub struct TapDanceConfig {
     pub tap: KeyAction,
     pub hold: KeyAction,
 }
-
-#[derive(Debug, Default, Deserialize)]
-pub struct LayerConfig(pub HashMap<String, LayerDefinition>);
 
 #[derive(Debug, Deserialize)]
 pub struct LayerDefinition {
@@ -144,20 +141,17 @@ pub enum KeyAction {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(untagged)]
 pub enum Macro {
-    SimpleMacro(SimpleMacro),
     EventMacro(Vec<EventMacro>),
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct SimpleMacro(pub Vec<KeyCode>);
-
-#[derive(Debug, Clone, Deserialize)]
 #[serde(untagged)]
 pub enum EventMacro {
+    Tap(KeyCode),
     Press { press: KeyCode },
     Hold { hold: KeyCode },
     Release { release: KeyCode },
-    Sleep { sleep: u16 },
+    Delay { delay: u32 },
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]

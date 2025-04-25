@@ -83,6 +83,16 @@ keyboards:
       KEY_Q: KEY_A
       KEY_CAPSLOCK: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
 
+      KEY_M:
+        [
+          { press: KEY_LEFTSHIFT },
+          { hold: KEY_LEFTSHIFT },
+          { press: KEY_O },
+          { release: KEY_O },
+          { delay: 500 },
+          KEY_K,
+        ]
+
     combos:
       - keys: [KEY_D, KEY_F]
         action: KEY_LEFTCTRL
@@ -91,12 +101,13 @@ keyboards:
       KEY_S:
         tap: KEY_S
         hold: KEY_LEFTSHIFT
+        timeout: 250 # (default: 200)
 
     layers:
       my_layer:
         modifier:
           key: KEY_C
-          # type: momentary (default) | toggle | oneshoot
+          type: toggle # | oneshoot | momentary (default: momentary
         keys:
           KEY_A: KEY_D
 ```
@@ -104,63 +115,127 @@ keyboards:
 </details>
 
 
-Your configuration file defines how `okey` remaps keys and sets up advanced behaviors. Here's a breakdown of all available fields:
+Your configuration file defines how `okey` remaps keys and sets up advanced behaviors. Here's a breakdown of the schema using [TypeScript](https://www.typescriptlang.org/) type definitons:
 
 ### `defaults` (optional)
 
 Shared global settings.
 
-#### **`general`**
+<details>
 
-- **`deferred_key_delay`** (`number`, optional): Delay for keys following non-acknowledged combos or tap dance keys.
+<summary>Expand</summary>
 
-#### **`tap_dance`**
+```typescript
+type Defaults = {
+  general?: {
+    /** Delay for keys following non-acknowledged combo or tap dance keys (default: 80ms) */
+    deferred_key_delay?: number;
+  };
+  tap_dance?: {
+    /** Fallback tap dance timeout (default: 200ms) */
+    default_timeout?: number;
+  };
+  combo?: {
+    /** Window for acknowledging combos (default: 50ms) */
+    default_threshold?: number;
+  };
+};
+```
 
-- **`default_timeout`** (`number`, optional): Fallback tap dance timeout.
-
-#### **`combo`**
-
-- **`default_threshold`** (`number`, optional): Window for acknowledging key combos.
+</details>
 
 ### `keyboards` (array)
 
-Defines the keyboards to apply remappings to.
+Per keyboard configuration.
 
-Each keyboard:
+<details>
 
-- **`name`** (`string`, required): The exact name of the keyboard as an input device (use `cat /proc/bus/input/devices`).
+<summary>Expand</summary>
 
-- **`keys`** (`map<string, string | string[]>`, optional): Simple key remaps or macros.  
+```typescript
+type Keyboard = {
+  /** Name of the keyboard as an input device, use 'cat /proc/bus/input/devices' */
+  name: string;
 
-  - Remap one key to another:  
-    `KEY_Q: KEY_A`  
-  - Define a macro (sequence of keys):  
-    `KEY_CAPSLOCK: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]`
+  /** Main layer mappings, remap keys here */
+  keys?: {
+    [keycode: string]: KeyAction;
+  };
 
-- **`combos`** (`array<object>`, optional): Define combos — pressing multiple keys together to trigger another action.
-  
-  Each combo:
-  - **`keys`** (`string[]`, required): The key combination.
-  - **`action`** (`string`, required): The triggered key.
+  /** Dual function keys on tap/hold */
+  tap_dances?: {
+    [keycode: string]: {
+      /** Action on tap, on release below timeout */
+      tap: KeyAction;
 
-- **`tap_dances`** (`map<string, object>`, optional): Define tap/hold behavior for a key.
-  
-  Each entry:
-  - **`tap`** (`string`, required): The key to send on a tap.
-  - **`hold`** (`string`, required): The key to send on a hold.
+      /** Action on hold, exceeded timeout */
+      hold: KeyAction;
 
-- **`layers`** (`map<string, object>`, optional): Define virtual layers (like shift layers on steroids).
+      /** When to consider as a hold (default: 200ms) */
+      timeout?: 250;
+    };
+  };
 
-  Each layer:
-  - **`modifier`** (`object`, required):  
-    The key that activates the layer.
-    - **`key`** (`string`, required): The modifier key.
-    - **`type`** (`string`, optional): Activation type.  
-      One of:  
-      - `momentary` (default): active while holding
-      - `toggle`: toggles on/off
-      - `oneshoot`: active for one keypress
-  - **`keys`** (`map<string, string>`, required):  The remappings that apply within this layer.
+  /** List of combo mappigns */
+  combos?: {
+    /** Set of keys to activate the combo */
+    keys: string[];
+
+    /** Action when keys are pressed/hold at the same time */
+    action: KeyAction;
+  }[];
+
+  /** Shift like virtual layers */
+  layers?: {
+    [name: string]: {
+      /** Layer activation key and behavior */
+      modifier:
+        | string
+        | {
+            /** Layer modfier keycode */
+            key: string;
+
+            /**
+             * Layer switch behavior:
+             * - momentary: Active on hold (default)
+             * - toggle: Always active or inactive until toggled
+             * - oneshoot: Active for one key press
+             */
+            type?: "momentary" | "toggle" | "oneshoot";
+          };
+
+      /** Key mappings for the layer */
+      keys: {
+        [keycode: string]: KeyAction;
+      };
+    };
+  };
+};
+```
+
+</details>
+
+#### `KeyAction`
+
+A single keycode or a sequence of key events (macro).
+
+<details>
+
+<summary>Expand</summary>
+
+```typescript
+/** A single keycode or a sequence of key events (macro) */
+type KeyAction = string | KeyEvent[];
+
+type KeyEvent =
+  | { press: string } // key press event
+  | { hold: string } // key hold event
+  | { release: string } // key release event
+  | { delay: number } // in milliseconds
+  | string; // press + release
+```
+
+</details>
 
 ## License
 

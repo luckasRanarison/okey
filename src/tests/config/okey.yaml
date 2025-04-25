@@ -19,9 +19,8 @@ keyboards:
           { press: KEY_O },
           { release: KEY_O },
           { release: KEY_LEFTSHIFT },
-          { sleep: 500 },
-          { press: KEY_K },
-          { release: KEY_K },
+          { delay: 500 },
+          KEY_K,
         ]
 
     combos:

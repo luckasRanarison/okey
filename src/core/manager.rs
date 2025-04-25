@@ -11,8 +11,7 @@ use super::{
     buffer::InputBuffer,
     combo::ComboManager,
     event::{
-        EventEmitter, HOLD_EVENT, IntoInputEvent, IntoInputEvents, IntoInputResult, PRESS_EVENT,
-        RELEASE_EVENT,
+        EventEmitter, IntoInputEvent, IntoInputResult, HOLD_EVENT, PRESS_EVENT, RELEASE_EVENT,
     },
     mapping::MappingManager,
     tap_dance::TapDanceManager,
@@ -26,7 +25,7 @@ pub enum InputResult {
     Release(KeyCode),
     Macro(Macro),
     DoubleSequence(Box<[InputResult; 2]>),
-    Sleep(u16),
+    Delay(u32),
     None,
 }
 
@@ -122,17 +121,13 @@ impl KeyManager {
                 self.dispatch_result(second, emitter)?;
             }
 
-            InputResult::Macro(Macro::SimpleMacro(codes)) => {
-                emitter.emit(&codes.to_events())?;
-            }
-
             InputResult::Macro(Macro::EventMacro(events)) => {
                 for event in events {
                     self.dispatch_result(&event.to_result(), emitter)?;
                 }
             }
 
-            InputResult::Sleep(timeout) => {
+            InputResult::Delay(timeout) => {
                 thread::sleep(Duration::from_millis(*timeout as u64));
             }
 
