@@ -15,8 +15,12 @@ pub struct Cli {
 pub enum Command {
     /// Start the keyboard remapping hook
     Start {
+        /// Configuration file path (default: ~/.config/okey/config.yaml)
         #[arg(short, long)]
         config: Option<String>,
+        /// Whether to start the process as a daemon
+        #[arg(short, long, default_value_t = false)]
+        daemon: bool,
     },
 
     /// Utility commands for the systemd service
@@ -28,12 +32,12 @@ pub enum Command {
 
 #[derive(Parser, Debug)]
 pub enum SystemdSubcommand {
-    /// Shorthand for 'systemctl --user start okey'
+    /// Shorthand for 'systemctl --user enable okey && systemctl --user start okey'
     Start,
+    /// Shorthand for 'systemctl --user stop okey && systemd --user disable okey'
+    Stop,
     /// Shorthand for 'systemctl --user restart okey'
     Restart,
-    /// Shorthand for 'systemctl --user stop okey'
-    Stop,
     /// Shorthand for 'systemctl --user status okey'
     Status,
     /// Create the systemd service file
