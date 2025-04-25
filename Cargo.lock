@@ -217,6 +217,7 @@ dependencies = [
  "anyhow",
  "clap",
  "evdev",
+ "indexmap",
  "nix",
  "ringbuffer",
  "serde",

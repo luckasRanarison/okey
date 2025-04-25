@@ -1,7 +1,6 @@
-use std::{
-    collections::{HashMap, HashSet},
-    time::Instant,
-};
+use std::{collections::HashSet, time::Instant};
+
+use indexmap::IndexMap;
 
 use crate::{
     config::schema::{ComboConfig, ComboDefinition, DefaultComboConfig, KeyAction, KeyCode},
@@ -14,7 +13,7 @@ use super::manager::InputResult;
 pub struct ComboManager {
     key_set: HashSet<u16>,
     definitions: Vec<ComboDefinition>,
-    pressed_keys: HashMap<u16, ComboKey>,
+    pressed_keys: IndexMap<u16, ComboKey>,
     supressed_keys: HashSet<u16>,
     active_combos: Vec<ActiveCombo>,
     config: DefaultComboConfig,
@@ -36,7 +35,7 @@ impl ComboManager {
             config,
             key_set,
             definitions,
-            pressed_keys: HashMap::with_capacity(8),
+            pressed_keys: IndexMap::with_capacity(8),
             supressed_keys: HashSet::with_capacity(3),
             active_combos: Vec::with_capacity(3),
         }
@@ -45,7 +44,7 @@ impl ComboManager {
     pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
         if self.key_set.contains(&code) {
             self.pressed_keys.insert(code, ComboKey::new());
-            Some(InputResult::None)
+            Some(InputResult::Pending(KeyCode::new(code)))
         } else {
             None
         }
@@ -108,7 +107,7 @@ impl ComboManager {
         }
 
         while let Some(code) = buffer.pop_key() {
-            self.pressed_keys.remove(&code);
+            self.pressed_keys.shift_remove(&code);
         }
     }
 
@@ -148,9 +147,13 @@ impl ComboManager {
                 .extend(combo.keys.iter().map(|key| key.value()));
 
             let (code, result) = match &combo.action {
-                KeyAction::KeyCode(code) => (Some(code.value()), InputResult::Press(code.clone())),
+                KeyAction::KeyCode(code) => (Some(code.value()), InputResult::Press(*code)),
                 KeyAction::Macro(codes) => (None, InputResult::Macro(codes.clone())),
             };
+
+            for key in &combo.keys {
+                buffer.clear_pending_key(key);
+            }
 
             self.active_combos
                 .push(ActiveCombo::new(code, combo.keys.clone()));

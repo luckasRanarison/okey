@@ -18,6 +18,7 @@ use super::{
 #[derive(Debug)]
 pub enum InputResult {
     Press(KeyCode),
+    Pending(KeyCode),
     Hold(KeyCode),
     Release(KeyCode),
     Macro(Vec<KeyCode>),
@@ -86,17 +87,43 @@ impl KeyManager {
         emitter: &mut E,
     ) -> Result<()> {
         match result {
-            InputResult::Press(code) | InputResult::Hold(code) | InputResult::Release(code) => {
-                self.dispatch_event_result(result, code.clone(), emitter)
+            InputResult::Pending(code) => {
+                self.buffer.set_pending_key(*code);
             }
+
+            InputResult::Release(code) if self.buffer.is_pending_key(code) => {
+                self.buffer.clear_pending_key(code);
+                self.dispatch_event_result(result, *code, emitter)?;
+
+                if !self.buffer.has_pending_keys() {
+                    self.dispatch_defered_events(emitter)?;
+                }
+            }
+
+            InputResult::Press(code)
+                if !self.buffer.is_pending_key(code) && self.buffer.has_pending_keys() =>
+            {
+                self.buffer.defer_key(*code);
+            }
+
+            InputResult::Press(code) | InputResult::Hold(code) | InputResult::Release(code) => {
+                self.dispatch_event_result(result, *code, emitter)?;
+            }
+
             InputResult::DoubleSequence(results) => {
                 let [first, second] = results.as_ref();
                 self.dispatch_result(first, emitter)?;
-                self.dispatch_result(second, emitter)
+                self.dispatch_result(second, emitter)?;
             }
-            InputResult::Macro(codes) => emitter.emit(&codes.to_events()),
-            InputResult::None => Ok(()),
+
+            InputResult::Macro(codes) => {
+                emitter.emit(&codes.to_events())?;
+            }
+
+            InputResult::None => {}
         }
+
+        Ok(())
     }
 
     fn dispatch_event_result<E: EventEmitter>(
@@ -119,6 +146,19 @@ impl KeyManager {
         } else {
             emitter.emit(&[code.to_event(event_kind)])
         }
+    }
+
+    fn dispatch_defered_events<E: EventEmitter>(&mut self, emitter: &mut E) -> Result<()> {
+        while let Some(key) = self.buffer.pop_defered_key() {
+            let result = InputResult::DoubleSequence(Box::new([
+                InputResult::Press(key),
+                InputResult::Release(key),
+            ]));
+
+            self.dispatch_result(&result, emitter)?;
+        }
+
+        Ok(())
     }
 
     fn handle_press(&mut self, action: KeyAction) -> InputResult {

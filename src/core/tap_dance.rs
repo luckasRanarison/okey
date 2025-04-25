@@ -41,7 +41,7 @@ impl TapDanceManager {
             self.pressed_keys
                 .push(PressedKey::new(code, config, self.config.default_timeout));
 
-            Some(InputResult::None)
+            Some(InputResult::Pending(KeyCode::new(code)))
         } else {
             None
         }
@@ -78,17 +78,27 @@ impl TapDanceManager {
                 continue;
             }
 
-            let result = state.get_dance_result(now);
+            let timeout = state.reached_timeout(now);
+            let result = state.get_dance_result(timeout);
+            let code = KeyCode::new(state.code);
 
             if let InputResult::Macro(_) = &result {
                 self.supressed_keys.insert(state.code);
             }
 
-            buffer.push_result(result);
+            if timeout {
+                buffer.clear_pending_key(&code);
+            }
 
             if state.released {
                 buffer.push_key(idx as u16);
+
+                if code.is_custom() {
+                    buffer.clear_pending_key(&code);
+                }
             }
+
+            buffer.push_result(result);
         }
 
         while let Some(idx) = buffer.pop_key() {
@@ -119,15 +129,18 @@ impl PressedKey {
         }
     }
 
-    fn get_dance_result(&self, now: Instant) -> InputResult {
+    fn reached_timeout(&self, now: Instant) -> bool {
         let elapsed = now.duration_since(self.timestamp).as_millis();
         let timeout = self.timeout as u128;
+        elapsed > timeout
+    }
 
-        if self.released && elapsed > timeout {
+    fn get_dance_result(&self, timeout: bool) -> InputResult {
+        if self.released && timeout {
             self.get_release_result()
         } else if self.released {
             self.get_tap_result()
-        } else if elapsed > timeout {
+        } else if timeout {
             self.get_hold_resut()
         } else {
             InputResult::None
@@ -136,7 +149,7 @@ impl PressedKey {
 
     fn get_release_result(&self) -> InputResult {
         match &self.hold {
-            KeyAction::KeyCode(code) => InputResult::Release(code.clone()),
+            KeyAction::KeyCode(code) => InputResult::Release(*code),
             KeyAction::Macro(_) => InputResult::None,
         }
     }
@@ -144,8 +157,8 @@ impl PressedKey {
     fn get_tap_result(&self) -> InputResult {
         match &self.tap {
             KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
-                InputResult::Press(code.clone()),
-                InputResult::Release(code.clone()),
+                InputResult::Press(*code),
+                InputResult::Release(*code),
             ])),
             KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
         }
@@ -154,8 +167,8 @@ impl PressedKey {
     fn get_hold_resut(&self) -> InputResult {
         match &self.hold {
             KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
-                InputResult::Press(code.clone()),
-                InputResult::Hold(code.clone()),
+                InputResult::Press(*code),
+                InputResult::Hold(*code),
             ])),
             KeyAction::Macro(codes) => InputResult::Macro(codes.clone()),
         }

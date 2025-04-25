@@ -126,7 +126,7 @@ pub enum KeyAction {
     Macro(Vec<KeyCode>),
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct KeyCode(evdev::KeyCode);
 
 impl KeyCode {
@@ -134,8 +134,12 @@ impl KeyCode {
         Self(evdev::KeyCode::new(code))
     }
 
-    pub fn value(&self) -> u16 {
+    pub fn value(self) -> u16 {
         self.0.code()
+    }
+
+    pub fn is_custom(self) -> bool {
+        self.0.code() >= SAFE_KEYCODE_START
     }
 }
 

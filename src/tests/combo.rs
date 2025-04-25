@@ -3,7 +3,7 @@ use std::{thread, time::Duration};
 use anyhow::Result;
 use evdev::KeyCode;
 
-use super::utils::{EventProcessor, FakeEventEmitter, get_test_manager, hold, press, release};
+use super::utils::{EventProcessor, FakeEventEmitter, get_test_manager, press, release};
 
 #[test]
 fn test_tap_combo() -> Result<()> {

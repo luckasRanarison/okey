@@ -36,7 +36,8 @@ impl FakeEventEmitter {
 
 impl EventEmitter for FakeEventEmitter {
     fn emit(&mut self, events: &[evdev::InputEvent]) -> anyhow::Result<()> {
-        Ok(self.queue.extend(events))
+        self.queue.extend(events);
+        Ok(())
     }
 }
 
