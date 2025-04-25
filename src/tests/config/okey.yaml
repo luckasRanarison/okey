@@ -19,6 +19,9 @@ keyboards:
       - keys: [KEY_H, KEY_J, KEY_K]
         action: KEY_BACKSPACE
 
+      - keys: [KEY_U, KEY_I]
+        action: [KEY_H, KEY_E, KEY_Y]
+
     tap_dances:
       KEY_S:
         tap: KEY_S

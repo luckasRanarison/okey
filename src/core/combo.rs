@@ -115,9 +115,11 @@ impl ComboManager {
         for (idx, combo) in self.active_combos.iter().enumerate() {
             let pressed_key = self.get_pressed_combo_key(combo);
 
-            if let Some((key, code)) = pressed_key.zip(combo.code) {
-                if key.hold {
-                    buffer.push_result(InputResult::Hold(KeyCode::new(code)));
+            if let Some(key) = pressed_key {
+                if let Some(code) = combo.code {
+                    if key.hold {
+                        buffer.push_result(InputResult::Hold(KeyCode::new(code)));
+                    }
                 }
             } else {
                 if let Some(code) = combo.code {
