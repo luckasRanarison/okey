@@ -12,6 +12,18 @@ keyboards:
       KEY_B: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
       KEY_Z: KEY_CUSTOM
 
+      KEY_X:
+        [
+          { press: KEY_LEFTSHIFT },
+          { hold: KEY_LEFTSHIFT },
+          { press: KEY_O },
+          { release: KEY_O },
+          { release: KEY_LEFTSHIFT },
+          { sleep: 500 },
+          { press: KEY_K },
+          { release: KEY_K },
+        ]
+
     combos:
       - keys: [KEY_D, KEY_F]
         action: KEY_LEFTCTRL

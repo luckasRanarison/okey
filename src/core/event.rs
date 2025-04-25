@@ -1,7 +1,9 @@
 use anyhow::Result;
 use evdev::{EventType, InputEvent, uinput::VirtualDevice};
 
-use crate::config::schema::{KeyAction, KeyCode};
+use crate::config::schema::{EventMacro, KeyCode, SimpleMacro};
+
+use super::manager::InputResult;
 
 pub const PRESS_EVENT: i32 = 1;
 pub const HOLD_EVENT: i32 = 2;
@@ -13,6 +15,10 @@ pub trait IntoInputEvent {
 
 pub trait IntoInputEvents {
     fn to_events(&self) -> Vec<InputEvent>;
+}
+
+pub trait IntoInputResult {
+    fn to_result(&self) -> InputResult;
 }
 
 pub trait EventEmitter {
@@ -40,17 +46,19 @@ impl IntoInputEvents for KeyCode {
     }
 }
 
-impl IntoInputEvents for Vec<KeyCode> {
+impl IntoInputEvents for SimpleMacro {
     fn to_events(&self) -> Vec<InputEvent> {
-        self.iter().flat_map(|code| code.to_events()).collect()
+        self.0.iter().flat_map(|code| code.to_events()).collect()
     }
 }
 
-impl IntoInputEvents for KeyAction {
-    fn to_events(&self) -> Vec<InputEvent> {
+impl IntoInputResult for EventMacro {
+    fn to_result(&self) -> InputResult {
         match self {
-            KeyAction::KeyCode(code) => code.to_events(),
-            KeyAction::Macro(codes) => codes.to_events(),
+            EventMacro::Press { press } => InputResult::Press(*press),
+            EventMacro::Hold { hold } => InputResult::Hold(*hold),
+            EventMacro::Release { release } => InputResult::Release(*release),
+            EventMacro::Sleep { sleep } => InputResult::Sleep(*sleep),
         }
     }
 }

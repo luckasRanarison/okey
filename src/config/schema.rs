@@ -138,7 +138,26 @@ pub enum LayerModifierKind {
 #[serde(untagged)]
 pub enum KeyAction {
     KeyCode(KeyCode),
-    Macro(Vec<KeyCode>),
+    Macro(Macro),
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+pub enum Macro {
+    SimpleMacro(SimpleMacro),
+    EventMacro(Vec<EventMacro>),
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SimpleMacro(pub Vec<KeyCode>);
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+pub enum EventMacro {
+    Press { press: KeyCode },
+    Hold { hold: KeyCode },
+    Release { release: KeyCode },
+    Sleep { sleep: u16 },
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]

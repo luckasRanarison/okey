@@ -3,13 +3,16 @@ use std::{thread, time::Duration};
 use anyhow::Result;
 use evdev::InputEvent;
 
-use crate::config::schema::{DefaultConfig, GeneralConfig, KeyAction, KeyCode, KeyboardConfig};
+use crate::config::schema::{
+    DefaultConfig, GeneralConfig, KeyAction, KeyCode, KeyboardConfig, Macro,
+};
 
 use super::{
     buffer::InputBuffer,
     combo::ComboManager,
     event::{
-        EventEmitter, HOLD_EVENT, IntoInputEvent, IntoInputEvents, PRESS_EVENT, RELEASE_EVENT,
+        EventEmitter, HOLD_EVENT, IntoInputEvent, IntoInputEvents, IntoInputResult, PRESS_EVENT,
+        RELEASE_EVENT,
     },
     mapping::MappingManager,
     tap_dance::TapDanceManager,
@@ -21,8 +24,9 @@ pub enum InputResult {
     Pending(KeyCode),
     Hold(KeyCode),
     Release(KeyCode),
-    Macro(Vec<KeyCode>),
+    Macro(Macro),
     DoubleSequence(Box<[InputResult; 2]>),
+    Sleep(u16),
     None,
 }
 
@@ -118,8 +122,18 @@ impl KeyManager {
                 self.dispatch_result(second, emitter)?;
             }
 
-            InputResult::Macro(codes) => {
+            InputResult::Macro(Macro::SimpleMacro(codes)) => {
                 emitter.emit(&codes.to_events())?;
+            }
+
+            InputResult::Macro(Macro::EventMacro(events)) => {
+                for event in events {
+                    self.dispatch_result(&event.to_result(), emitter)?;
+                }
+            }
+
+            InputResult::Sleep(timeout) => {
+                thread::sleep(Duration::from_millis(*timeout as u64));
             }
 
             InputResult::None => {}

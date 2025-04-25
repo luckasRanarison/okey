@@ -63,6 +63,29 @@ fn test_macro_key() -> Result<()> {
 }
 
 #[test]
+fn test_event_macro() -> Result<()> {
+    let mut emitter = FakeEventEmitter::default();
+    let mut manager = get_test_manager();
+
+    manager.process(press(KeyCode::KEY_X), &mut emitter)?;
+    manager.process(release(KeyCode::KEY_X), &mut emitter)?;
+
+    let expected = vec![
+        press(KeyCode::KEY_LEFTSHIFT),
+        hold(KeyCode::KEY_LEFTSHIFT),
+        press(KeyCode::KEY_O),
+        release(KeyCode::KEY_O),
+        release(KeyCode::KEY_LEFTSHIFT),
+        press(KeyCode::KEY_K),
+        release(KeyCode::KEY_K),
+    ];
+
+    assert_eq!(emitter.queue(), &expected);
+
+    Ok(())
+}
+
+#[test]
 fn test_custom_code() -> Result<()> {
     let mut emitter = FakeEventEmitter::default();
     let mut manager = get_test_manager();
