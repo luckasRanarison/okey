@@ -2,6 +2,9 @@
 
 An easy to use and powerful key remapper for Linux written in Rust, inspired by [QMK](https://qmk.fm/).
 
+> [!NOTE]
+> This project is currently in its early stages of development. A more comprehensive documentation will be available soon.
+
 ## Contents
 
 1. [Features](#features)
@@ -20,9 +23,6 @@ An easy to use and powerful key remapper for Linux written in Rust, inspired by 
 - Tap dance (multi-function keys on tap/hold)
 - Virtual layers (TODO)
 
-> [!NOTE]
-> This project is currently in its early stages of development. A more comprehensive documentation will be available soon.
-
 ## Installation
 
 > [!IMPORTANT]
@@ -37,7 +37,7 @@ cd okey && cargo install --path .
 
 ## Usage
 
-`okey` is meant to be used as a [systemd](https://github.com/systemd/systemd) service and expects a configuration file is required at `~/.config/okey/config.yaml` (see the [schema](#configuration-schema)).
+`okey` is meant to be used as a [systemd](https://github.com/systemd/systemd) service and expects a configuration file at `~/.config/okey/config.yaml` (see the [schema](#configuration-schema)).
 
 For simple testing, you can use the `start` command to activate keymaps.
 
@@ -51,7 +51,7 @@ To run `okey` as a service, you can use the following commands:
 
 ```
 okey service install -- creates the okey.service file
-okey service start -- shorthand for systemctl --user enable okey && systemd --user start okey
+okey service start -- shorthand for systemctl --user enable okey && systemctl --user start okey
 ```
 
 Use `okey --help` to see all the available commands.
