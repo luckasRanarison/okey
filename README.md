@@ -49,14 +49,17 @@ okey start --config ./path/to/config/okey.yaml --daemon
 
 To run `okey` as a service, you can use the following commands:
 
-```
-okey service install -- creates the okey.service file
-okey service start -- shorthand for systemctl --user enable okey && systemctl --user start okey
+```bash
+okey service install # creates the okey.service file
+okey service start # shorthand for systemctl --user enable okey && systemctl --user start okey
 ```
 
 Use `okey --help` to see all the available commands.
 
 ## Configuration Schema
+
+> [!NOTE]
+> To represent keys, `okey` uses the [keycode](https://docs.rs/evdev/latest/evdev/struct.KeyCode.html) strings from the [evdev](https://docs.rs/evdev/latest/evdev/) crate, use it for reference.
 
 The configuration for okey is written in [YAML](https://yaml.org/), and here is a sample:
 
@@ -109,15 +112,15 @@ Shared global settings.
 
 #### **`general`**
 
-- **`deferred_key_delay`** (number): Delay for keys following non-acknowledged combos or tap dance keys.
+- **`deferred_key_delay`** (`number`, optional): Delay for keys following non-acknowledged combos or tap dance keys.
 
-#### **`tap_dances`**
+#### **`tap_dance`**
 
-- **`default_timeout`** (number): Fallback tap dance timeout.
+- **`default_timeout`** (`number`, optional): Fallback tap dance timeout.
 
 #### **`combo`**
 
-- **`default_threshold`** (number): Window for acknowledging key combos.
+- **`default_threshold`** (`number`, optional): Window for acknowledging key combos.
 
 ### `keyboards` (array)
 
@@ -136,7 +139,7 @@ Each keyboard:
 
 - **`combos`** (`array<object>`, optional): Define combos — pressing multiple keys together to trigger another action.
   
-  Each combo object contains:
+  Each combo:
   - **`keys`** (`string[]`, required): The key combination.
   - **`action`** (`string`, required): The triggered key.
 

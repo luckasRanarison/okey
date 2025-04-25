@@ -34,7 +34,7 @@ pub enum Command {
 pub enum SystemdSubcommand {
     /// Shorthand for 'systemctl --user enable okey && systemctl --user start okey'
     Start,
-    /// Shorthand for 'systemctl --user stop okey && systemd --user disable okey'
+    /// Shorthand for 'systemctl --user stop okey && systemctl --user disable okey'
     Stop,
     /// Shorthand for 'systemctl --user restart okey'
     Restart,
