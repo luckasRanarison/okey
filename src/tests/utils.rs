@@ -3,7 +3,7 @@ use evdev::{EventType, InputEvent, KeyCode};
 
 use crate::{
     config::schema::Config,
-    core::{EventEmitter, KeyManager},
+    core::test_utils::{EventEmitter, KeyManager},
 };
 
 const CONFIG: &str = include_str!("./config/okey.yaml");

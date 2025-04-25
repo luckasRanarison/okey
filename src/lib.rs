@@ -1,7 +1,8 @@
 pub mod cli;
-pub mod config;
-pub mod core;
-pub mod fs;
+
+mod config;
+mod core;
+mod fs;
 
 #[cfg(test)]
 mod tests;

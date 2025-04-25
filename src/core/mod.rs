@@ -6,6 +6,10 @@ mod mapping;
 mod proxy;
 mod tap_dance;
 
-pub use event::EventEmitter;
-pub use manager::KeyManager;
 pub use proxy::EventProxy;
+
+#[cfg(test)]
+pub mod test_utils {
+    pub use super::event::EventEmitter;
+    pub use super::manager::KeyManager;
+}

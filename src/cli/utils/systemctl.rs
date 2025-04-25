@@ -33,7 +33,7 @@ pub fn stop() -> Result<()> {
 
 pub fn status() -> Result<()> {
     Command::new("systemctl")
-        .args(&["--user", "status", "okey"])
+        .args(["--user", "status", "okey"])
         .status()?;
 
     Ok(())
