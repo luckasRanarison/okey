@@ -1,9 +1,9 @@
+use std::{thread, time::Duration};
+
 use anyhow::Result;
 use evdev::InputEvent;
 
-use crate::config::schema::{
-    DefaultConfig, KeyAction, KeyCode, KeyboardConfig, SAFE_KEYCODE_START,
-};
+use crate::config::schema::{DefaultConfig, GeneralConfig, KeyAction, KeyCode, KeyboardConfig};
 
 use super::{
     buffer::InputBuffer,
@@ -32,20 +32,22 @@ pub struct KeyManager {
     combo_manager: ComboManager,
     tap_dance_manager: TapDanceManager,
     buffer: InputBuffer,
+    config: GeneralConfig,
     // layer_manager: LayerManager,
 }
 
 impl KeyManager {
-    pub fn new(config: KeyboardConfig, general: DefaultConfig) -> Self {
+    pub fn new(config: KeyboardConfig, defaults: DefaultConfig) -> Self {
         let mapping_manager = MappingManager::new(config.keys);
-        let combo_manager = ComboManager::new(config.combos, general.combo);
-        let tap_dance_manager = TapDanceManager::new(config.tap_dances, general.tap_dance);
+        let combo_manager = ComboManager::new(config.combos, defaults.combo);
+        let tap_dance_manager = TapDanceManager::new(config.tap_dances, defaults.tap_dance);
         // let layer_manager = LayerManager::new(config.layers);
 
         Self {
             mapping_manager,
             tap_dance_manager,
             combo_manager,
+            config: defaults.general,
             buffer: InputBuffer::default(),
             // layer_manager,
         }
@@ -96,7 +98,7 @@ impl KeyManager {
                 self.dispatch_event_result(result, *code, emitter)?;
 
                 if !self.buffer.has_pending_keys() {
-                    self.dispatch_defered_events(emitter)?;
+                    self.dispatch_deferred_events(emitter)?;
                 }
             }
 
@@ -139,7 +141,7 @@ impl KeyManager {
             _ => unreachable!(),
         };
 
-        if code.value() >= SAFE_KEYCODE_START {
+        if code.is_custom() {
             let action = KeyAction::KeyCode(code);
             let result = handler(self, action);
             self.dispatch_result(&result, emitter)
@@ -148,8 +150,12 @@ impl KeyManager {
         }
     }
 
-    fn dispatch_defered_events<E: EventEmitter>(&mut self, emitter: &mut E) -> Result<()> {
-        while let Some(key) = self.buffer.pop_defered_key() {
+    fn dispatch_deferred_events<E: EventEmitter>(&mut self, emitter: &mut E) -> Result<()> {
+        let delay = Duration::from_millis(self.config.deferred_key_delay.into());
+
+        while let Some(key) = self.buffer.pop_deferred_key() {
+            thread::sleep(delay); // add a small delay to make input smoother
+
             let result = InputResult::DoubleSequence(Box::new([
                 InputResult::Press(key),
                 InputResult::Release(key),

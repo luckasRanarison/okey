@@ -13,7 +13,7 @@ const DEFER_BUFFER_SIZE: usize = 3;
 pub struct InputBuffer {
     results: ConstGenericRingBuffer<InputResult, BUFFER_SIZE>,
     processed: ConstGenericRingBuffer<u16, BUFFER_SIZE>,
-    defered_keys: ConstGenericRingBuffer<KeyCode, DEFER_BUFFER_SIZE>,
+    deferred_keys: ConstGenericRingBuffer<KeyCode, DEFER_BUFFER_SIZE>,
     pending_keys: HashSet<KeyCode>,
 }
 
@@ -51,10 +51,10 @@ impl InputBuffer {
     }
 
     pub fn defer_key(&mut self, code: KeyCode) {
-        self.defered_keys.enqueue(code);
+        self.deferred_keys.enqueue(code);
     }
 
-    pub fn pop_defered_key(&mut self) -> Option<KeyCode> {
-        self.defered_keys.dequeue()
+    pub fn pop_deferred_key(&mut self) -> Option<KeyCode> {
+        self.deferred_keys.dequeue()
     }
 }

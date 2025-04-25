@@ -15,6 +15,7 @@ pub struct Config {
 pub struct DefaultConfig {
     pub tap_dance: DefaultTapDanceConfig,
     pub combo: DefaultComboConfig,
+    pub general: GeneralConfig,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -26,7 +27,7 @@ pub struct DefaultTapDanceConfig {
 impl Default for DefaultTapDanceConfig {
     fn default() -> Self {
         Self {
-            default_timeout: defaults::TAP_DANCE_TIMEOUT,
+            default_timeout: defaults::tap_dance_timeout(),
         }
     }
 }
@@ -40,7 +41,21 @@ pub struct DefaultComboConfig {
 impl Default for DefaultComboConfig {
     fn default() -> Self {
         Self {
-            default_threshold: defaults::COMBO_THRESHOLD,
+            default_threshold: defaults::combo_threshold(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GeneralConfig {
+    #[serde(default = "defaults::deferred_key_delay")]
+    pub deferred_key_delay: u16,
+}
+
+impl Default for GeneralConfig {
+    fn default() -> Self {
+        Self {
+            deferred_key_delay: defaults::deferred_key_delay(),
         }
     }
 }
