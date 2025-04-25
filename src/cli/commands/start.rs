@@ -1,12 +1,14 @@
-use std::{fs, thread};
+use std::thread;
 
 use anyhow::{Result, anyhow};
 
-use crate::{config::schema::Config, core::EventProxy, fs::device::find_device_by_name};
+use crate::{
+    core::EventProxy,
+    fs::{config::read_config, device::find_device_by_name},
+};
 
-pub fn start(config: &str) -> Result<()> {
-    let config = fs::read_to_string(config)?;
-    let parsed: Config = serde_yaml::from_str(&config)?;
+pub fn start(config_path: Option<String>) -> Result<()> {
+    let parsed = read_config(config_path)?;
 
     let handles = parsed.keyboards.into_iter().map(|keyboard| {
         let defaults = parsed.defaults.clone();
