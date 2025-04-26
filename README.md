@@ -120,33 +120,33 @@ Shared global settings, fields:
 
 #### `general`
 
-- `deferred_key_delay`: Delay for keys following non-acknowledged combo or tap dance keys.  
+- `deferred_key_delay`: Delay for keys following non-acknowledged special keys.
 
-  _Type_: `number`  
+  _Type_: `number`
 
   _Default_: `80` (ms)
 
 #### `tap_dance`
 
-- `default_timeout`: Fallback tap dance timeout.  
+- `default_timeout`: Fallback tap dance timeout.
 
-  _Type_: `number`  
+  _Type_: `number`
 
   _Default_: `200` (ms)
 
 #### `combo`
 
-- `default_threshold`: Window for acknowledging combos.  
+- `default_threshold`: Window for acknowledging combos.
 
-  _Type_: `number`  
+  _Type_: `number`
 
   _Default_: `50` (ms)
 
-### `keyboards` (array)  
+### `keyboards` (array)
 
 Per keyboard configuration.
 
-Shared types:
+Type aliases:
 
 <details>
 
@@ -713,15 +713,15 @@ A custom string or one of:
 
 <summary><code>KeyAction</code> (expand)</summary>
 
-#### `KeyAction`  
+#### `KeyAction`
 
-A single keycode or a sequence of key events (macro).  
+A single keycode or a sequence of key events (macro).
 
 _Type_: `KeyCode` | `KeyEvent[]`
 
-_Example_: `KEY_C`, `[KEY_H, { press: KEY_I, release: KEY_I }]`
+_Example_: `KEY_C`, `[KEY_H, { press: KEY_I }, { release: KEY_I }]`
 
-#### `KeyEvent`  
+#### `KeyEvent`
 
 > To **hold** a key, a press event musy be preceding hold.
 
@@ -739,64 +739,101 @@ _Type_:
 
 </details>
 
+<details>
+
+<summary><code>TapDance</code> (expand)</summary>
+
+#### `TapDance`
+
+Tap dance entry configuration.
+
+- `tap`: Action on tap, on release below timeout.
+
+  _Type_: `KeyAction`
+
+- `hold`: Action on hold, exceeded timeout.
+
+  _Type_: `KeyAction`
+
+- `timeout`: When to consider as a hold.
+
+  _Type_: `number`
+
+  _Default_: `250` (ms)
+
+</details>
+
+<details>
+
+<summary><code>Combo</code> (expand)</summary>
+
+#### `Combo`
+
+Combo entry cobfiguration.
+
+- `keys`: Set of keys to activate the combo.
+
+  _Type_: `KeyCode[]`
+
+- `action`: Action when keys are pressed/held at the same time.
+
+  _Type_: `KeyAction`
+
+</details>
+
+<details>
+
+<summary><code>Layer</code> (expand)</summary>
+
+#### `Layer`
+
+Layer entry configuration.
+
+- `modifier`: Layer activation key and behavior.
+
+  _Type_: `KeyCode` | `{ key: KeyCode; type?: "momentary" | "toggle" | "oneshoot" }`
+
+- `keys`: Key mappings for the layer.
+
+  _Type_: `Record<KeyCode, KeyAction>`
+
+</details>
+
 Fields:
 
-#### `name`  
+#### `name`
 
-- `name`: Name of the keyboard as an input device, use `cat /proc/bus/input/devices`.
+Name of the keyboard as an input device, use `cat /proc/bus/input/devices`.
 
   _Type_: `string`
 
-#### `keys` (optional)  
+#### `keys` (optional)
 
 Key mappings for the main layer.
 
 _Type_: `Record<KeyCode, KeyAction>`
 
 
-#### `tap_dances` (optional)  
+#### `tap_dances` (optional)
 
 Dual function keys on tap/hold.
 
-- `[keycode: KeyCode]`:
-  - `tap`: Action on tap, on release below timeout.
+_Type_: `Record<KeyCode, TapDance>`
 
-    _Type_: `KeyAction`
 
-  - `hold`: Action on hold, exceeded timeout.
+#### `combos` (optional)
 
-    _Type_: `KeyAction`
+List of combo mappings.
 
-  - `timeout`: When to consider as a hold.
+_Type_: `Combo[]`
 
-    _Type_: `number`  
 
-    _Default_: `250` (ms)
-
-#### `combos` (optional)  
-
-Array of combo mappings, each:
-
-  - `keys`: Set of keys to activate the combo.
-
-    _Type_: `KeyCode[]`
-
-  - `action`: Action when keys are pressed/held at the same time.
-
-    _Type_: `KeyAction`
-
-#### `layers` (optional)  
+#### `layers` (optional)
 
 Virtual layers (shift-like).
 
-- `[name: string]`:
-  - `modifier`: Layer activation key and behavior.
+_Type_: `Record<string, Layer>`
 
-    _Type_: `KeyCode` | `{ key: KeyCode; type?: "momentary" | "toggle" | "oneshoot" }`
-
-  - `keys`: Key mappings for the layer.
-
-    _Type_: `Record<KeyCode, KeyAction>`
 
 ## License
 
