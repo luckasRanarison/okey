@@ -87,8 +87,12 @@ keyboards:
           { press: KEY_O },
           { release: KEY_O },
           { delay: 500 },
-          KEY_K,
+          KEY_K, # press + release
         ]
+
+      KEY_R: [{ string: "Hello " } , { env: USERNAME }]
+      KEY_T: { unicode: 🙂👍 }
+      KEY_Y: { shell: 'date "+%d %B %Y"', trim: true }
 
     combos:
       - keys: [KEY_D, KEY_F]
@@ -98,13 +102,13 @@ keyboards:
       KEY_S:
         tap: KEY_S
         hold: KEY_LEFTSHIFT
-        timeout: 250 # (default: 200)
+        timeout: 250
 
     layers:
       my_layer:
         modifier:
           key: KEY_C
-          type: toggle # | oneshoot | momentary (default: momentary
+          type: toggle # | oneshoot | momentary (default: momentary)
         keys:
           KEY_A: KEY_D
 ```
@@ -126,7 +130,7 @@ Shared global settings, fields:
 
   _Default_: `80` (ms)
 
-- `unicode_input_delay`: Delay for entering unicode codepoints using `CTRL` + `SHIFT` + `U` + `<code>` + `Enter`.
+- `unicode_input_delay`: Delay for inserting unicode codepoints with macro. (flushing)
 
   _Type_: `number`
 
@@ -736,9 +740,9 @@ _Type_:
 - `{ press: KeyCode }`
 - `{ hold: KeyCode }`
 - `{ release: KeyCode }`
-- `{ delay: number }` Input delay in milliseconds.
-- `{ string: string }` ASCII string.
-- `{ env: string }` Environment variable key.
+- `{ delay: number }`: Input delay in milliseconds.
+- `{ string: string }`: ASCII string.
+- `{ env: string }`: Environment variable key.
 - `{ unicode: string }`: Unicode string.
 - `{ shell: string }`: Bash shell command.
 - `KeyCode`: Tap + Release.
