@@ -131,7 +131,7 @@ pub enum LayerModifierKind {
     #[default]
     Momentary,
     Toggle,
-    Oneshoot,
+    // Oneshoot,
 }
 
 #[derive(Debug, Clone, Deserialize)]

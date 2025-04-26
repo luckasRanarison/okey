@@ -2,6 +2,7 @@ mod buffer;
 mod combo;
 mod event;
 mod input;
+mod layer;
 mod manager;
 mod mapping;
 mod proxy;

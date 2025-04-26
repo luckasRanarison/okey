@@ -52,14 +52,13 @@ keyboards:
         hold: KEY_LEFTSHIFT
 
     layers:
-      my_layer:
-        modifier:
-          key: KEY_C
-          # type: momentary # toggle # oneshoot
+      mom_layer:
+        modifier: KEY_SPACE
         keys:
-          KEY_A: KEY_D
+          KEY_P: KEY_Q
+          KEY_V: KEY_B
 
-      another:
-        modifier: KEY_D
+      sup_layer:
+        modifier: KEY_B
         keys:
-          KEY_C: KEY_A
+          KEY_P: KEY_X

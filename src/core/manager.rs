@@ -11,6 +11,7 @@ use super::{
     buffer::InputBuffer,
     combo::ComboManager,
     event::{EventEmitter, HOLD_EVENT, IntoInputEvent, PRESS_EVENT, RELEASE_EVENT, ToInputResult},
+    layer::LayerManager,
     mapping::MappingManager,
     tap_dance::TapDanceManager,
 };
@@ -34,7 +35,7 @@ pub struct KeyManager {
     tap_dance_manager: TapDanceManager,
     buffer: InputBuffer,
     config: GeneralConfig,
-    // layer_manager: LayerManager,
+    layer_manager: LayerManager,
 }
 
 impl KeyManager {
@@ -42,7 +43,7 @@ impl KeyManager {
         let mapping_manager = MappingManager::new(config.keys);
         let combo_manager = ComboManager::new(config.combos, defaults.combo);
         let tap_dance_manager = TapDanceManager::new(config.tap_dances, defaults.tap_dance);
-        // let layer_manager = LayerManager::new(config.layers);
+        let layer_manager = LayerManager::new(config.layers);
 
         Self {
             mapping_manager,
@@ -50,7 +51,7 @@ impl KeyManager {
             combo_manager,
             config: defaults.general,
             buffer: InputBuffer::default(),
-            // layer_manager,
+            layer_manager,
         }
     }
 
@@ -60,7 +61,7 @@ impl KeyManager {
         emitter: &mut E,
     ) -> Result<()> {
         let code = self.mapping_manager.map(&event.code());
-        // let code = self.layer_manager.map(&code);
+        let code = self.layer_manager.map(code);
         let value = event.value();
 
         let result = match value {
@@ -202,8 +203,9 @@ impl KeyManager {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                self.tap_dance_manager
+                self.layer_manager
                     .handle_press(value)
+                    .or_else(|| self.tap_dance_manager.handle_press(value))
                     .or_else(|| self.combo_manager.handle_press(value))
                     .unwrap_or(InputResult::Press(code))
             }
@@ -216,8 +218,9 @@ impl KeyManager {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                self.tap_dance_manager
+                self.layer_manager
                     .handle_hold(value)
+                    .or_else(|| self.tap_dance_manager.handle_hold(value))
                     .or_else(|| self.combo_manager.handle_hold(value))
                     .unwrap_or(InputResult::Hold(code))
             }
@@ -230,8 +233,9 @@ impl KeyManager {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                self.tap_dance_manager
+                self.layer_manager
                     .handle_release(value)
+                    .or_else(|| self.tap_dance_manager.handle_release(value))
                     .or_else(|| self.combo_manager.handle_release(value))
                     .unwrap_or(InputResult::Release(code))
             }

@@ -93,6 +93,7 @@ impl TapDanceManager {
             if state.released {
                 buffer.push_key(idx as u16);
 
+                // FIXME: This breaks toggle layers on tap
                 if code.is_custom() {
                     buffer.clear_pending_key(&code);
                 }
@@ -141,7 +142,7 @@ impl PressedKey {
         } else if self.released {
             self.get_tap_result()
         } else if timeout {
-            self.get_hold_resut()
+            self.get_hold_result()
         } else {
             InputResult::None
         }
@@ -164,7 +165,7 @@ impl PressedKey {
         }
     }
 
-    fn get_hold_resut(&self) -> InputResult {
+    fn get_hold_result(&self) -> InputResult {
         match &self.hold {
             KeyAction::KeyCode(code) => InputResult::DoubleSequence(Box::new([
                 InputResult::Press(*code),
