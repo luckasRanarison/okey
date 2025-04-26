@@ -181,7 +181,7 @@ impl KeyManager {
 
         let events = match value {
             Macro::Sequence(value) => value
-                .into_iter()
+                .iter()
                 .map(|m| m.to_results(delay))
                 .collect::<Result<Vec<_>>>()?
                 .into_iter()

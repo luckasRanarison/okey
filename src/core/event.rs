@@ -43,10 +43,10 @@ impl ToInputResult for EventMacro {
             EventMacro::Hold { hold } => Ok(vec![InputResult::Hold(*hold)]),
             EventMacro::Release { release } => Ok(vec![InputResult::Release(*release)]),
             EventMacro::Delay { delay: sleep } => Ok(vec![InputResult::Delay(*sleep)]),
-            EventMacro::String { string } => string_to_input(&string),
+            EventMacro::String { string } => string_to_input(string),
             EventMacro::Env { env } => string_to_input(&std::env::var(env)?),
-            EventMacro::Unicode { unicode } => unicode_to_input(&unicode, delay),
-            EventMacro::Shell { shell, trim } => command_to_input(&shell, *trim),
+            EventMacro::Unicode { unicode } => unicode_to_input(unicode, delay),
+            EventMacro::Shell { shell, trim } => command_to_input(shell, *trim),
             EventMacro::Tap(code) => Ok(vec![InputResult::DoubleSequence(Box::new([
                 InputResult::Press(*code),
                 InputResult::Release(*code),

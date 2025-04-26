@@ -129,5 +129,5 @@ pub fn command_to_input(command: &str, trim: Option<bool>) -> Result<Vec<InputRe
     let trim = trim.unwrap_or_default();
     let slice = if trim { parsed.trim() } else { &parsed };
 
-    string_to_input(&slice)
+    string_to_input(slice)
 }
