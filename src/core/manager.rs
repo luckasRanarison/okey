@@ -10,9 +10,7 @@ use crate::config::schema::{
 use super::{
     buffer::InputBuffer,
     combo::ComboManager,
-    event::{
-        EventEmitter, IntoInputEvent, IntoInputResult, HOLD_EVENT, PRESS_EVENT, RELEASE_EVENT,
-    },
+    event::{EventEmitter, HOLD_EVENT, IntoInputEvent, PRESS_EVENT, RELEASE_EVENT, ToInputResult},
     mapping::MappingManager,
     tap_dance::TapDanceManager,
 };
@@ -121,10 +119,8 @@ impl KeyManager {
                 self.dispatch_result(second, emitter)?;
             }
 
-            InputResult::Macro(Macro::EventMacro(events)) => {
-                for event in events {
-                    self.dispatch_result(&event.to_result(), emitter)?;
-                }
+            InputResult::Macro(value) => {
+                self.dispatch_event_macro(value, emitter)?;
             }
 
             InputResult::Delay(timeout) => {
@@ -171,6 +167,31 @@ impl KeyManager {
             ]));
 
             self.dispatch_result(&result, emitter)?;
+        }
+
+        Ok(())
+    }
+
+    fn dispatch_event_macro<E: EventEmitter>(
+        &mut self,
+        value: &Macro,
+        emitter: &mut E,
+    ) -> Result<()> {
+        let delay = self.config.unicode_input_delay;
+
+        let events = match value {
+            Macro::Sequence(value) => value
+                .into_iter()
+                .map(|m| m.to_results(delay))
+                .collect::<Result<Vec<_>>>()?
+                .into_iter()
+                .flatten()
+                .collect(),
+            Macro::Single(event) => event.to_results(delay)?,
+        };
+
+        for event in events {
+            self.dispatch_result(&event, emitter)?;
         }
 
         Ok(())

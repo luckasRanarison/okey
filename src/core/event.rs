@@ -1,9 +1,12 @@
 use anyhow::Result;
-use evdev::{uinput::VirtualDevice, EventType, InputEvent};
+use evdev::{EventType, InputEvent, uinput::VirtualDevice};
 
 use crate::config::schema::{EventMacro, KeyCode};
 
-use super::manager::InputResult;
+use super::{
+    input::{command_to_input, string_to_input, unicode_to_input},
+    manager::InputResult,
+};
 
 pub const PRESS_EVENT: i32 = 1;
 pub const HOLD_EVENT: i32 = 2;
@@ -13,8 +16,8 @@ pub trait IntoInputEvent {
     fn to_event(&self, value: i32) -> InputEvent;
 }
 
-pub trait IntoInputResult {
-    fn to_result(&self) -> InputResult;
+pub trait ToInputResult {
+    fn to_results(&self, delay: u16) -> Result<Vec<InputResult>>;
 }
 
 pub trait EventEmitter {
@@ -33,17 +36,21 @@ impl IntoInputEvent for KeyCode {
     }
 }
 
-impl IntoInputResult for EventMacro {
-    fn to_result(&self) -> InputResult {
+impl ToInputResult for EventMacro {
+    fn to_results(&self, delay: u16) -> Result<Vec<InputResult>> {
         match self {
-            EventMacro::Press { press } => InputResult::Press(*press),
-            EventMacro::Hold { hold } => InputResult::Hold(*hold),
-            EventMacro::Release { release } => InputResult::Release(*release),
-            EventMacro::Delay { delay: sleep } => InputResult::Delay(*sleep),
-            EventMacro::Tap(code) => InputResult::DoubleSequence(Box::new([
+            EventMacro::Press { press } => Ok(vec![InputResult::Press(*press)]),
+            EventMacro::Hold { hold } => Ok(vec![InputResult::Hold(*hold)]),
+            EventMacro::Release { release } => Ok(vec![InputResult::Release(*release)]),
+            EventMacro::Delay { delay: sleep } => Ok(vec![InputResult::Delay(*sleep)]),
+            EventMacro::String { string } => string_to_input(&string),
+            EventMacro::Env { env } => string_to_input(&std::env::var(env)?),
+            EventMacro::Unicode { unicode } => unicode_to_input(&unicode, delay),
+            EventMacro::Shell { shell, trim } => command_to_input(&shell, *trim),
+            EventMacro::Tap(code) => Ok(vec![InputResult::DoubleSequence(Box::new([
                 InputResult::Press(*code),
                 InputResult::Release(*code),
-            ])),
+            ]))]),
         }
     }
 }

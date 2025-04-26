@@ -126,6 +126,12 @@ Shared global settings, fields:
 
   _Default_: `80` (ms)
 
+- `unicode_input_delay`: Delay for entering unicode codepoints using `CTRL` + `SHIFT` + `U` + `<code>` + `Enter`.
+
+  _Type_: `number`
+
+  _Default_: `50` (ms)
+
 #### `tap_dance`
 
 - `default_timeout`: Fallback tap dance timeout.
@@ -727,15 +733,15 @@ _Example_: `KEY_C`, `[KEY_H, { press: KEY_I }, { release: KEY_I }]`
 
 _Type_:
 
-| `{ press: string }`
-
-| `{ hold: string }`
-
-| `{ release: string }`
-
-| `{ delay: number }`
-
-| `KeyCode`
+- `{ press: KeyCode }`
+- `{ hold: KeyCode }`
+- `{ release: KeyCode }`
+- `{ delay: number }` Input delay in milliseconds.
+- `{ string: string }` ASCII string.
+- `{ env: string }` Environment variable key.
+- `{ unicode: string }`: Unicode string.
+- `{ shell: string }`: Bash shell command.
+- `KeyCode`: Tap + Release.
 
 </details>
 

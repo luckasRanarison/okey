@@ -3,22 +3,22 @@ use std::{thread, time::Duration};
 use anyhow::Result;
 use evdev::KeyCode;
 
-use super::utils::{EventProcessor, FakeEventEmitter, get_test_manager, hold, press, release};
+use crate::tests::utils::EventTarget;
+
+use super::utils::{EventProcessor, FakeEventEmitter, get_test_manager};
 
 #[test]
 fn test_tap_combo() -> Result<()> {
     let mut emitter = FakeEventEmitter::default();
     let mut manager = get_test_manager();
 
-    manager.process(press(KeyCode::KEY_D), &mut emitter)?;
-    manager.process(press(KeyCode::KEY_F), &mut emitter)?;
+    manager.process(KeyCode::KEY_D.combo_press(KeyCode::KEY_F), &mut emitter)?;
     thread::sleep(Duration::from_millis(20));
-    manager.process(release(KeyCode::KEY_D), &mut emitter)?;
-    manager.process(release(KeyCode::KEY_F), &mut emitter)?;
+    manager.process(KeyCode::KEY_D.combo_release(KeyCode::KEY_F), &mut emitter)?;
 
-    let expected = vec![press(KeyCode::KEY_LEFTCTRL), release(KeyCode::KEY_LEFTCTRL)];
+    let expected = KeyCode::KEY_LEFTCTRL.tap();
 
-    assert_eq!(emitter.queue(), &expected);
+    assert_eq!(emitter.queue(), expected.value());
 
     Ok(())
 }
@@ -28,36 +28,27 @@ fn test_macro_combo() -> Result<()> {
     let mut emitter = FakeEventEmitter::default();
     let mut manager = get_test_manager();
 
-    let expected = vec![
-        press(KeyCode::KEY_H),
-        release(KeyCode::KEY_H),
-        press(KeyCode::KEY_E),
-        release(KeyCode::KEY_E),
-        press(KeyCode::KEY_Y),
-        release(KeyCode::KEY_Y),
-    ];
+    let expected = KeyCode::KEY_H
+        .tap_then(KeyCode::KEY_E)
+        .tap_then(KeyCode::KEY_Y)
+        .tap();
 
-    manager.process(press(KeyCode::KEY_U), &mut emitter)?;
-    manager.process(press(KeyCode::KEY_I), &mut emitter)?;
+    manager.process(KeyCode::KEY_U.combo_press(KeyCode::KEY_I), &mut emitter)?;
     thread::sleep(Duration::from_millis(20));
-    manager.process(release(KeyCode::KEY_U), &mut emitter)?;
-    manager.process(release(KeyCode::KEY_I), &mut emitter)?;
+    manager.process(KeyCode::KEY_U.combo_release(KeyCode::KEY_I), &mut emitter)?;
 
-    assert_eq!(emitter.queue(), &expected);
+    assert_eq!(emitter.queue(), expected.value());
 
     emitter.clear();
 
-    manager.process(press(KeyCode::KEY_U), &mut emitter)?;
-    manager.process(press(KeyCode::KEY_I), &mut emitter)?;
+    manager.process(KeyCode::KEY_U.combo_press(KeyCode::KEY_I), &mut emitter)?;
     thread::sleep(Duration::from_millis(90));
-    manager.process(hold(KeyCode::KEY_U), &mut emitter)?;
-    manager.process(hold(KeyCode::KEY_I), &mut emitter)?;
+    manager.process(KeyCode::KEY_U.combo_hold(KeyCode::KEY_I), &mut emitter)?;
     thread::sleep(Duration::from_millis(90));
-    manager.process(release(KeyCode::KEY_U), &mut emitter)?;
-    manager.process(release(KeyCode::KEY_I), &mut emitter)?;
+    manager.process(KeyCode::KEY_U.combo_release(KeyCode::KEY_I), &mut emitter)?;
 
     // macros should not repeat on hold
-    assert_eq!(emitter.queue(), &expected);
+    assert_eq!(emitter.queue(), expected.value());
 
     Ok(())
 }
@@ -67,13 +58,13 @@ fn test_expired_combo_key() -> Result<()> {
     let mut emitter = FakeEventEmitter::default();
     let mut manager = get_test_manager();
 
-    manager.process(press(KeyCode::KEY_D), &mut emitter)?;
+    manager.process(KeyCode::KEY_D.press(), &mut emitter)?;
     thread::sleep(Duration::from_millis(50));
-    manager.process(release(KeyCode::KEY_D), &mut emitter)?;
+    manager.process(KeyCode::KEY_D.release(), &mut emitter)?;
 
-    let expected = vec![press(KeyCode::KEY_D), release(KeyCode::KEY_D)];
+    let expected = KeyCode::KEY_D.tap();
 
-    assert_eq!(emitter.queue(), &expected);
+    assert_eq!(emitter.queue(), expected.value());
 
     emitter.clear();
 

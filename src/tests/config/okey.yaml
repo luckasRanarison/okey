@@ -12,6 +12,11 @@ keyboards:
       KEY_B: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
       KEY_Z: KEY_CUSTOM
 
+      KEY_R: { string: "Hi, you!" }
+      KEY_E: { env: FOO }
+      KEY_T: { unicode: 🙂👍 }
+      KEY_Y: { shell: "echo 'foo'", trim: true }
+
       KEY_X:
         [
           { press: KEY_LEFTSHIFT },

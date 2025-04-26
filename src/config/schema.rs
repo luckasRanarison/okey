@@ -50,12 +50,15 @@ impl Default for DefaultComboConfig {
 pub struct GeneralConfig {
     #[serde(default = "defaults::deferred_key_delay")]
     pub deferred_key_delay: u16,
+    #[serde(default = "defaults::unicode_input_delay")]
+    pub unicode_input_delay: u16,
 }
 
 impl Default for GeneralConfig {
     fn default() -> Self {
         Self {
             deferred_key_delay: defaults::deferred_key_delay(),
+            unicode_input_delay: defaults::unicode_input_delay(),
         }
     }
 }
@@ -141,7 +144,8 @@ pub enum KeyAction {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(untagged)]
 pub enum Macro {
-    EventMacro(Vec<EventMacro>),
+    Single(EventMacro),
+    Sequence(Vec<EventMacro>),
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -152,10 +156,20 @@ pub enum EventMacro {
     Hold { hold: KeyCode },
     Release { release: KeyCode },
     Delay { delay: u32 },
+    String { string: String },
+    Env { env: String },
+    Unicode { unicode: String },
+    Shell { shell: String, trim: Option<bool> },
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct KeyCode(evdev::KeyCode);
+
+impl From<evdev::KeyCode> for KeyCode {
+    fn from(value: evdev::KeyCode) -> Self {
+        Self(value)
+    }
+}
 
 impl KeyCode {
     pub fn new(code: u16) -> Self {
