@@ -1,6 +1,6 @@
 # okey
 
-An easy to use and powerful key remapper for Linux written in Rust, inspired by [QMK](https://qmk.fm/).
+An advanced, easy-to-use key remapper for Linux written in Rust, inspired by [QMK](https://qmk.fm/).
 
 > [!NOTE]
 > This project is currently in its early stages of development. A more comprehensive documentation will be available soon.
@@ -21,7 +21,10 @@ An easy to use and powerful key remapper for Linux written in Rust, inspired by 
 - Macros
 - Combos
 - Tap dance (multi-function keys on tap/hold)
-- Virtual layers (TODO)
+- Virtual layers
+
+> [!TIP]
+> The features are composable. For example, you can use a combo to trigger a tap dance.
 
 ## Installation
 
@@ -136,7 +139,7 @@ Shared global settings, fields:
 
   _Default_: `50` (ms)
 
-- event_poll_timeout: Controls the main event loop interval.
+- `event_poll_timeout`: Controls the main event loop interval.
 
   _Type_: `number`
 
@@ -751,7 +754,7 @@ _Type_:
 - `{ env: string }`: Environment variable key.
 - `{ unicode: string }`: Unicode string.
 - `{ shell: string }`: Bash shell command.
-- `KeyCode`: Tap + Release.
+- `KeyCode`: Press + Release.
 
 </details>
 
