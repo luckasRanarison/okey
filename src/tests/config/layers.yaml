@@ -6,12 +6,19 @@ keyboards:
         tap: KEY_TOGLAYER
         hold: KEY_MOMLAYER
 
+      KEY_O:
+        tap: KEY_ONELAYER
+        hold: KEY_TAB
+
     combos:
       - keys: [KEY_S, KEY_D]
         action: KEY_MOMLAYER
 
       - keys: [KEY_K, KEY_L]
         action: KEY_TOGLAYER
+
+      - keys: [KEY_D, KEY_F]
+        action: KEY_ONELAYER
 
     layers:
       first_layer:
@@ -34,5 +41,12 @@ keyboards:
         modifier:
           key: KEY_TOGLAYER
           type: toggle
+        keys:
+          KEY_P: KEY_X
+
+      one_layer:
+        modifier:
+          key: KEY_ONELAYER
+          type: oneshoot
         keys:
           KEY_P: KEY_X

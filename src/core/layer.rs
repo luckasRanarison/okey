@@ -72,6 +72,17 @@ impl LayerManager {
 
             Some(InputResult::None)
         } else {
+            let result = self.layer_stack.iter().rev().find(|code| {
+                self.layer_map
+                    .get(code)
+                    .map(|layer| layer.modifier.get_modifer_kind())
+                    .is_some_and(|kind| matches!(kind, LayerModifierKind::Oneshoot))
+            });
+
+            if let Some(result) = result.cloned() {
+                self.layer_stack.retain(|code| *code != result);
+            }
+
             None
         }
     }
