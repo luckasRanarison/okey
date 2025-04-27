@@ -2,10 +2,12 @@ use std::{thread, time::Duration};
 
 use super::utils::*;
 
+const CONFIG: &str = include_str!("./config/combos.yaml");
+
 #[test]
 fn test_tap_combo() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(
         InputBuffer::combo_press(KeyCode::KEY_D, KeyCode::KEY_F),
@@ -29,7 +31,7 @@ fn test_tap_combo() -> Result<()> {
 #[test]
 fn test_macro_combo() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     let expected = InputBuffer::new(KeyCode::KEY_H)
         .tap_then(KeyCode::KEY_E)
@@ -80,7 +82,7 @@ fn test_macro_combo() -> Result<()> {
 #[test]
 fn test_expired_combo_key() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::press(KeyCode::KEY_D), &mut emitter)?;
 
@@ -93,6 +95,31 @@ fn test_expired_combo_key() -> Result<()> {
     assert_eq!(emitter.queue(), expected.value());
 
     emitter.clear();
+
+    Ok(())
+}
+
+#[test]
+fn test_derred_combo_key() -> Result<()> {
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::with_config(CONFIG);
+
+    let expected = InputBuffer::new(KeyCode::KEY_D)
+        .tap_then(KeyCode::KEY_A)
+        .tap();
+
+    manager.process(InputBuffer::press(KeyCode::KEY_D), &mut emitter)?;
+
+    thread::sleep(Duration::from_millis(60));
+
+    manager.process(
+        InputBuffer::new(KeyCode::KEY_D)
+            .release_then(KeyCode::KEY_A)
+            .tap(),
+        &mut emitter,
+    )?;
+
+    assert_eq!(emitter.queue(), expected.value());
 
     Ok(())
 }

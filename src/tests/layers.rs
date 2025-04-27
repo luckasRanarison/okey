@@ -2,10 +2,12 @@ use std::{thread, time::Duration};
 
 use super::utils::*;
 
+const CONFIG: &str = include_str!("./config/layers.yaml");
+
 #[test]
 fn test_simple_momentary_layer() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(
         InputBuffer::new(KeyCode::KEY_SPACE)
@@ -34,17 +36,17 @@ fn test_simple_momentary_layer() -> Result<()> {
 #[test]
 fn test_combo_momentary_layer() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(
-        InputBuffer::combo_press(KeyCode::KEY_L, KeyCode::KEY_M),
+        InputBuffer::combo_press(KeyCode::KEY_S, KeyCode::KEY_D),
         &mut emitter,
     )?;
 
     thread::sleep(Duration::from_millis(90));
 
     manager.process(
-        InputBuffer::combo_hold(KeyCode::KEY_L, KeyCode::KEY_M),
+        InputBuffer::combo_hold(KeyCode::KEY_S, KeyCode::KEY_D),
         &mut emitter,
     )?;
 
@@ -53,7 +55,7 @@ fn test_combo_momentary_layer() -> Result<()> {
     manager.process(InputBuffer::tap(KeyCode::KEY_P), &mut emitter)?;
 
     manager.process(
-        InputBuffer::combo_release(KeyCode::KEY_L, KeyCode::KEY_M),
+        InputBuffer::combo_release(KeyCode::KEY_S, KeyCode::KEY_D),
         &mut emitter,
     )?;
 

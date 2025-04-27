@@ -1,9 +1,28 @@
 use super::utils::*;
 
+const CONFIG: &str = include_str!("./config/macros.yaml");
+
+#[test]
+fn test_event_macro() -> Result<()> {
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::with_config(CONFIG);
+
+    manager.process(InputBuffer::tap(KeyCode::KEY_X), &mut emitter)?;
+
+    let expected = InputBuffer::new(KeyCode::KEY_O)
+        .shifted()
+        .then(KeyCode::KEY_K)
+        .tap();
+
+    assert_eq!(emitter.queue(), expected.value());
+
+    Ok(())
+}
+
 #[test]
 fn test_string_macro() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::tap(KeyCode::KEY_R), &mut emitter)?;
 
@@ -26,7 +45,7 @@ fn test_string_macro() -> Result<()> {
 #[test]
 fn test_env_macro() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     unsafe { std::env::set_var("FOO", "foo") };
 
@@ -45,7 +64,7 @@ fn test_env_macro() -> Result<()> {
 #[test]
 fn test_unicode_macro() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::tap(KeyCode::KEY_T), &mut emitter)?;
 
@@ -74,7 +93,7 @@ fn test_unicode_macro() -> Result<()> {
 #[test]
 fn test_shell_macro() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::tap(KeyCode::KEY_Y), &mut emitter)?;
 

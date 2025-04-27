@@ -2,8 +2,6 @@ use evdev::{EventType, InputEvent};
 
 use crate::config::schema::Config;
 
-const CONFIG: &str = include_str!("./config/okey.yaml");
-
 pub trait EventProcessor {
     fn process_input<E: EventEmitter>(&mut self, event: InputEvent, emitter: &mut E) -> Result<()>;
 
@@ -45,9 +43,9 @@ impl EventEmitter for BufferedEventEmitter {
     }
 }
 
-impl Default for KeyManager {
-    fn default() -> Self {
-        let mut config: Config = serde_yaml::from_str(CONFIG).unwrap();
+impl KeyManager {
+    pub fn with_config(config: &str) -> Self {
+        let mut config: Config = serde_yaml::from_str(config).unwrap();
         let keyboard = config.keyboards.remove(0);
         let defaults = config.defaults.clone();
 

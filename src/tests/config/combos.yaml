@@ -1,0 +1,9 @@
+keyboards:
+  - name: "Combo test keyboard"
+
+    combos:
+      - keys: [KEY_D, KEY_F]
+        action: KEY_LEFTCTRL
+
+      - keys: [KEY_U, KEY_I]
+        action: [KEY_H, KEY_E, KEY_Y]

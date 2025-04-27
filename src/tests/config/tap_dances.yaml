@@ -1,0 +1,11 @@
+keyboards:
+  - name: "Tap dance test keyboard"
+
+    tap_dances:
+      KEY_S:
+        tap: KEY_S
+        hold: KEY_LEFTSHIFT
+
+      KEY_H:
+        tap: [KEY_H, KEY_I]
+        hold: [KEY_H, KEY_E, KEY_Y]

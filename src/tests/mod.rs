@@ -1,4 +1,3 @@
-mod buffer;
 mod combo;
 mod layers;
 mod macros;

@@ -2,10 +2,12 @@ use std::{thread, time::Duration};
 
 use super::utils::*;
 
+const CONFIG: &str = include_str!("./config/tap_dances.yaml");
+
 #[test]
 fn test_key_tap() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     let expected = InputBuffer::tap(KeyCode::KEY_S);
 
@@ -19,7 +21,7 @@ fn test_key_tap() -> Result<()> {
 #[test]
 fn test_key_hold() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::press(KeyCode::KEY_S).hold(), &mut emitter)?;
 
@@ -38,7 +40,7 @@ fn test_key_hold() -> Result<()> {
 #[test]
 fn test_macro_tap() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::tap(KeyCode::KEY_H), &mut emitter)?;
 
@@ -54,7 +56,7 @@ fn test_macro_tap() -> Result<()> {
 #[test]
 fn test_macro_hold() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::press(KeyCode::KEY_H).hold(), &mut emitter)?;
 
@@ -68,6 +70,22 @@ fn test_macro_hold() -> Result<()> {
         .tap();
 
     // macros should not repeat on hold
+    assert_eq!(emitter.queue(), expected.value());
+
+    Ok(())
+}
+
+#[test]
+fn test_tap_dance_key() -> Result<()> {
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::with_config(CONFIG);
+
+    let expected = InputBuffer::new(KeyCode::KEY_S)
+        .tap_then(KeyCode::KEY_A)
+        .tap();
+
+    manager.process(expected.clone(), &mut emitter)?;
+
     assert_eq!(emitter.queue(), expected.value());
 
     Ok(())

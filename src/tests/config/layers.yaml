@@ -1,0 +1,23 @@
+keyboards:
+  - name: "Layer test keyboard"
+
+    combos:
+      - keys: [KEY_S, KEY_D]
+        action: KEY_CUSTOMLAYER
+
+    layers:
+      mom_layer:
+        modifier: KEY_SPACE
+        keys:
+          KEY_P: KEY_Q
+          KEY_V: KEY_B
+
+      sup_layer:
+        modifier: KEY_B
+        keys:
+          KEY_P: KEY_X
+
+      custom_layer:
+        modifier: KEY_CUSTOMLAYER
+        keys:
+          KEY_P: KEY_X

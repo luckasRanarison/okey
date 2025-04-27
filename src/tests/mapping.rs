@@ -2,10 +2,12 @@ use std::{thread, time::Duration};
 
 use super::utils::*;
 
+const CONFIG: &str = include_str!("./config/mappings.yaml");
+
 #[test]
 fn test_basic_key() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::tap_hold(KeyCode::KEY_Q), &mut emitter)?;
 
@@ -19,7 +21,7 @@ fn test_basic_key() -> Result<()> {
 #[test]
 fn test_macro_key() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     let expected = InputBuffer::new(KeyCode::KEY_H)
         .tap_then(KeyCode::KEY_E)
@@ -43,26 +45,9 @@ fn test_macro_key() -> Result<()> {
 }
 
 #[test]
-fn test_event_macro() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
-
-    manager.process(InputBuffer::tap(KeyCode::KEY_X), &mut emitter)?;
-
-    let expected = InputBuffer::new(KeyCode::KEY_O)
-        .shifted()
-        .then(KeyCode::KEY_K)
-        .tap();
-
-    assert_eq!(emitter.queue(), expected.value());
-
-    Ok(())
-}
-
-#[test]
 fn test_custom_code() -> Result<()> {
     let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::default();
+    let mut manager = KeyManager::with_config(CONFIG);
 
     manager.process(InputBuffer::tap(KeyCode::KEY_Z), &mut emitter)?;
 
