@@ -1,10 +1,6 @@
-use anyhow::Result;
-use evdev::{EventType, InputEvent, KeyCode};
+use evdev::{EventType, InputEvent};
 
-use crate::{
-    config::schema::Config,
-    core::test_utils::{EventEmitter, KeyManager},
-};
+use crate::config::schema::Config;
 
 const CONFIG: &str = include_str!("./config/okey.yaml");
 
@@ -28,11 +24,11 @@ impl EventProcessor for KeyManager {
 }
 
 #[derive(Debug, Default)]
-pub struct FakeEventEmitter {
+pub struct BufferedEventEmitter {
     queue: Vec<InputEvent>,
 }
 
-impl FakeEventEmitter {
+impl BufferedEventEmitter {
     pub fn queue(&self) -> &[InputEvent] {
         &self.queue
     }
@@ -42,19 +38,21 @@ impl FakeEventEmitter {
     }
 }
 
-impl EventEmitter for FakeEventEmitter {
+impl EventEmitter for BufferedEventEmitter {
     fn emit(&mut self, events: &[evdev::InputEvent]) -> anyhow::Result<()> {
         self.queue.extend(events);
         Ok(())
     }
 }
 
-pub fn get_test_manager() -> KeyManager {
-    let mut config: Config = serde_yaml::from_str(CONFIG).unwrap();
-    let keyboard = config.keyboards.remove(0);
-    let defaults = config.defaults.clone();
+impl Default for KeyManager {
+    fn default() -> Self {
+        let mut config: Config = serde_yaml::from_str(CONFIG).unwrap();
+        let keyboard = config.keyboards.remove(0);
+        let defaults = config.defaults.clone();
 
-    KeyManager::new(keyboard, defaults)
+        KeyManager::new(keyboard, defaults)
+    }
 }
 
 pub trait EventTarget: Sized {
@@ -91,45 +89,33 @@ pub trait EventTarget: Sized {
     fn shifted(self) -> InputBuffer {
         let code = self.code();
 
-        let buffer = KeyCode::KEY_LEFTSHIFT
+        let buffer = InputBuffer::new(KeyCode::KEY_LEFTSHIFT)
             .press()
             .hold()
             .then(code)
             .tap_then(KeyCode::KEY_LEFTSHIFT)
             .release();
 
-        InputBuffer::new(self.into_value(), Some(code)).chain(buffer)
-    }
-
-    fn combo_press<E: EventTarget>(self, other: E) -> InputBuffer {
-        self.press_then(other.code()).press()
-    }
-
-    fn combo_hold<E: EventTarget>(self, other: E) -> InputBuffer {
-        self.hold_then(other.code()).hold()
-    }
-
-    fn combo_release<E: EventTarget>(self, other: E) -> InputBuffer {
-        self.release_then(other.code()).release()
+        InputBuffer::new(code).chain(self).chain(buffer)
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct InputBuffer {
-    current_code: Option<KeyCode>,
+    current_code: KeyCode,
     buffer: Vec<InputEvent>,
 }
 
 impl InputBuffer {
-    fn new(buffer: Vec<InputEvent>, current_code: Option<KeyCode>) -> Self {
+    pub fn new(code: KeyCode) -> Self {
         Self {
-            current_code,
-            buffer,
+            current_code: code,
+            buffer: Vec::new(),
         }
     }
 
     pub fn then(mut self, code: KeyCode) -> Self {
-        self.current_code = Some(code);
+        self.current_code = code;
         self
     }
 
@@ -137,15 +123,43 @@ impl InputBuffer {
         &self.buffer
     }
 
-    pub fn chain(mut self, other: Self) -> Self {
-        self.buffer.extend(other.buffer);
+    pub fn chain<E: EventTarget>(mut self, other: E) -> Self {
+        self.buffer.extend(other.into_value());
         self
+    }
+
+    pub fn press(code: KeyCode) -> Self {
+        Self::new(code).press()
+    }
+
+    pub fn release(code: KeyCode) -> Self {
+        Self::new(code).release()
+    }
+
+    pub fn tap(code: KeyCode) -> Self {
+        Self::new(code).tap()
+    }
+
+    pub fn tap_hold(code: KeyCode) -> Self {
+        Self::new(code).tap_hold()
+    }
+
+    pub fn combo_press(first: KeyCode, other: KeyCode) -> Self {
+        Self::new(first).press_then(other).press()
+    }
+
+    pub fn combo_hold(first: KeyCode, other: KeyCode) -> Self {
+        Self::new(first).hold_then(other).hold()
+    }
+
+    pub fn combo_release(first: KeyCode, other: KeyCode) -> Self {
+        Self::new(first).release_then(other).release()
     }
 }
 
 impl EventTarget for InputBuffer {
     fn code(&self) -> KeyCode {
-        self.current_code.unwrap()
+        self.current_code
     }
 
     fn into_value(self) -> Vec<InputEvent> {
@@ -153,54 +167,23 @@ impl EventTarget for InputBuffer {
     }
 
     fn release(mut self) -> InputBuffer {
-        if let Some(code) = self.current_code {
-            self.buffer.push(release(code));
-        }
-
+        self.buffer.push(release(self.current_code));
         self
     }
 
     fn press(mut self) -> InputBuffer {
-        if let Some(code) = self.current_code {
-            self.buffer.push(press(code));
-        }
-
+        self.buffer.push(press(self.current_code));
         self
     }
 
     fn hold(mut self) -> InputBuffer {
-        if let Some(code) = self.current_code {
-            self.buffer.push(hold(code));
-        }
-
+        self.buffer.push(hold(self.current_code));
         self
     }
 }
 
-impl EventTarget for KeyCode {
-    fn code(&self) -> KeyCode {
-        *self
-    }
-
-    fn into_value(self) -> Vec<InputEvent> {
-        vec![]
-    }
-
-    fn press(self) -> InputBuffer {
-        InputBuffer::new(vec![press(self)], Some(self))
-    }
-
-    fn hold(self) -> InputBuffer {
-        InputBuffer::new(vec![hold(self)], Some(self))
-    }
-
-    fn release(self) -> InputBuffer {
-        InputBuffer::new(vec![release(self)], Some(self))
-    }
-}
-
 pub fn unicode() -> InputBuffer {
-    KeyCode::KEY_LEFTCTRL
+    InputBuffer::new(KeyCode::KEY_LEFTCTRL)
         .press_then(KeyCode::KEY_LEFTSHIFT)
         .press_then(KeyCode::KEY_U)
         .press_then(KeyCode::KEY_LEFTCTRL)
@@ -223,3 +206,8 @@ fn press(code: KeyCode) -> InputEvent {
 fn hold(code: KeyCode) -> InputEvent {
     InputEvent::new(EventType::KEY.0, code.code(), 2)
 }
+
+pub use anyhow::Result;
+pub use evdev::KeyCode;
+
+pub use crate::core::test_utils::*;

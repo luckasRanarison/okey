@@ -32,11 +32,11 @@ keyboards:
       - keys: [KEY_D, KEY_F]
         action: KEY_LEFTCTRL
 
-      - keys: [KEY_H, KEY_J, KEY_K]
-        action: KEY_BACKSPACE
-
       - keys: [KEY_U, KEY_I]
         action: [KEY_H, KEY_E, KEY_Y]
+
+      - keys: [KEY_L, KEY_M]
+        action: KEY_CUSTOMLAYER
 
     tap_dances:
       KEY_S:
@@ -60,5 +60,10 @@ keyboards:
 
       sup_layer:
         modifier: KEY_B
+        keys:
+          KEY_P: KEY_X
+
+      custom_layer:
+        modifier: KEY_CUSTOMLAYER
         keys:
           KEY_P: KEY_X

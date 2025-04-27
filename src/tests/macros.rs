@@ -1,18 +1,13 @@
-use anyhow::Result;
-use evdev::KeyCode;
-
-use crate::tests::utils::{EventTarget, unicode};
-
-use super::utils::{EventProcessor, FakeEventEmitter, get_test_manager};
+use super::utils::*;
 
 #[test]
 fn test_string_macro() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
-    manager.process(KeyCode::KEY_R.tap(), &mut emitter)?;
+    manager.process(InputBuffer::tap(KeyCode::KEY_R), &mut emitter)?;
 
-    let expected = KeyCode::KEY_H
+    let expected = InputBuffer::new(KeyCode::KEY_H)
         .shifted()
         .then(KeyCode::KEY_I)
         .tap_then(KeyCode::KEY_COMMA)
@@ -30,14 +25,17 @@ fn test_string_macro() -> Result<()> {
 
 #[test]
 fn test_env_macro() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
     unsafe { std::env::set_var("FOO", "foo") };
 
-    manager.process(KeyCode::KEY_E.tap(), &mut emitter)?;
+    manager.process(InputBuffer::tap(KeyCode::KEY_E), &mut emitter)?;
 
-    let expected = KeyCode::KEY_F.tap_then(KeyCode::KEY_O).tap().tap();
+    let expected = InputBuffer::new(KeyCode::KEY_F)
+        .tap_then(KeyCode::KEY_O)
+        .tap()
+        .tap();
 
     assert_eq!(emitter.queue(), expected.value());
 
@@ -46,10 +44,10 @@ fn test_env_macro() -> Result<()> {
 
 #[test]
 fn test_unicode_macro() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
-    manager.process(KeyCode::KEY_T.tap(), &mut emitter)?;
+    manager.process(InputBuffer::tap(KeyCode::KEY_T), &mut emitter)?;
 
     let expected = unicode()
         .then(KeyCode::KEY_1)
@@ -75,12 +73,15 @@ fn test_unicode_macro() -> Result<()> {
 
 #[test]
 fn test_shell_macro() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
-    manager.process(KeyCode::KEY_Y.tap(), &mut emitter)?;
+    manager.process(InputBuffer::tap(KeyCode::KEY_Y), &mut emitter)?;
 
-    let expected = KeyCode::KEY_F.tap_then(KeyCode::KEY_O).tap().tap();
+    let expected = InputBuffer::new(KeyCode::KEY_F)
+        .tap_then(KeyCode::KEY_O)
+        .tap()
+        .tap();
 
     assert_eq!(emitter.queue(), expected.value());
 

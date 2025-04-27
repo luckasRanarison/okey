@@ -1,18 +1,13 @@
 use std::{thread, time::Duration};
 
-use anyhow::Result;
-use evdev::KeyCode;
-
-use crate::tests::utils::EventTarget;
-
-use super::utils::{EventProcessor, FakeEventEmitter, get_test_manager};
+use super::utils::*;
 
 #[test]
 fn test_key_tap() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
-    let expected = KeyCode::KEY_S.tap();
+    let expected = InputBuffer::tap(KeyCode::KEY_S);
 
     manager.process(expected.clone(), &mut emitter)?;
 
@@ -23,18 +18,17 @@ fn test_key_tap() -> Result<()> {
 
 #[test]
 fn test_key_hold() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
-    manager.process(
-        KeyCode::KEY_S.press_then(KeyCode::KEY_S).hold(),
-        &mut emitter,
-    )?;
+    manager.process(InputBuffer::press(KeyCode::KEY_S).hold(), &mut emitter)?;
+
     thread::sleep(Duration::from_millis(250));
-    manager.post_process(&mut emitter)?;
-    manager.process(KeyCode::KEY_S.release(), &mut emitter)?;
 
-    let expected = KeyCode::KEY_LEFTSHIFT.tap_hold();
+    manager.post_process(&mut emitter)?;
+    manager.process(InputBuffer::release(KeyCode::KEY_S), &mut emitter)?;
+
+    let expected = InputBuffer::tap_hold(KeyCode::KEY_LEFTSHIFT);
 
     assert_eq!(emitter.queue(), expected.value());
 
@@ -43,12 +37,14 @@ fn test_key_hold() -> Result<()> {
 
 #[test]
 fn test_macro_tap() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
-    manager.process(KeyCode::KEY_H.tap(), &mut emitter)?;
+    manager.process(InputBuffer::tap(KeyCode::KEY_H), &mut emitter)?;
 
-    let expected = KeyCode::KEY_H.tap_then(KeyCode::KEY_I).tap();
+    let expected = InputBuffer::new(KeyCode::KEY_H)
+        .tap_then(KeyCode::KEY_I)
+        .tap();
 
     assert_eq!(emitter.queue(), expected.value());
 
@@ -57,14 +53,16 @@ fn test_macro_tap() -> Result<()> {
 
 #[test]
 fn test_macro_hold() -> Result<()> {
-    let mut emitter = FakeEventEmitter::default();
-    let mut manager = get_test_manager();
+    let mut emitter = BufferedEventEmitter::default();
+    let mut manager = KeyManager::default();
 
-    manager.process(KeyCode::KEY_H.press().hold(), &mut emitter)?;
+    manager.process(InputBuffer::press(KeyCode::KEY_H).hold(), &mut emitter)?;
+
     thread::sleep(Duration::from_millis(250));
+
     manager.post_process(&mut emitter)?;
 
-    let expected = KeyCode::KEY_H
+    let expected = InputBuffer::new(KeyCode::KEY_H)
         .tap_then(KeyCode::KEY_E)
         .tap_then(KeyCode::KEY_Y)
         .tap();
