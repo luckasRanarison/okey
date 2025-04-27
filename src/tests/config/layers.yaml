@@ -1,23 +1,38 @@
 keyboards:
-  - name: "Layer test keyboard"
+  - name: "AT Translated Set 2 keyboard"
+
+    tap_dances:
+      KEY_A:
+        tap: KEY_TOGLAYER
+        hold: KEY_MOMLAYER
 
     combos:
       - keys: [KEY_S, KEY_D]
-        action: KEY_CUSTOMLAYER
+        action: KEY_MOMLAYER
+
+      - keys: [KEY_K, KEY_L]
+        action: KEY_TOGLAYER
 
     layers:
-      mom_layer:
+      first_layer:
         modifier: KEY_SPACE
         keys:
           KEY_P: KEY_Q
           KEY_V: KEY_B
 
-      sup_layer:
+      second_layer:
         modifier: KEY_B
         keys:
           KEY_P: KEY_X
 
-      custom_layer:
-        modifier: KEY_CUSTOMLAYER
+      mom_layer:
+        modifier: KEY_MOMLAYER
+        keys:
+          KEY_P: KEY_X
+
+      tog_layer:
+        modifier:
+          key: KEY_TOGLAYER
+          type: toggle
         keys:
           KEY_P: KEY_X

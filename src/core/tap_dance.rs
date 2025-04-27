@@ -82,8 +82,18 @@ impl TapDanceManager {
             let result = state.get_dance_result(timeout);
             let code = KeyCode::new(state.code);
 
-            if let InputResult::Macro(_) = &result {
-                self.supressed_keys.insert(state.code);
+            match &result {
+                InputResult::Macro(_) => {
+                    self.supressed_keys.insert(state.code);
+                }
+                InputResult::DoubleSequence(inner) if !timeout => {
+                    if let [InputResult::Press(out_code), _] = inner.as_ref() {
+                        if *out_code != code {
+                            buffer.clear_pending_key(&code);
+                        }
+                    }
+                }
+                _ => {}
             }
 
             if timeout {
@@ -92,11 +102,6 @@ impl TapDanceManager {
 
             if state.released {
                 buffer.push_key(idx as u16);
-
-                // FIXME: This breaks toggle layers on tap
-                if code.is_custom() {
-                    buffer.clear_pending_key(&code);
-                }
             }
 
             buffer.push_result(result);
