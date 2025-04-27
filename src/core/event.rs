@@ -1,11 +1,11 @@
 use anyhow::Result;
-use evdev::{EventType, InputEvent, uinput::VirtualDevice};
+use evdev::{EventType, InputEvent};
 
 use crate::config::schema::{EventMacro, KeyCode};
 
 use super::{
+    adapter::InputResult,
     input::{command_to_input, string_to_input, unicode_to_input},
-    manager::InputResult,
 };
 
 pub const PRESS_EVENT: i32 = 1;
@@ -18,16 +18,6 @@ pub trait IntoInputEvent {
 
 pub trait ToInputResult {
     fn to_results(&self, delay: u16) -> Result<Vec<InputResult>>;
-}
-
-pub trait EventEmitter {
-    fn emit(&mut self, events: &[InputEvent]) -> Result<()>;
-}
-
-impl EventEmitter for VirtualDevice {
-    fn emit(&mut self, events: &[InputEvent]) -> Result<()> {
-        Ok(self.emit(events)?)
-    }
 }
 
 impl IntoInputEvent for KeyCode {

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::config::schema::{KeyAction, LayerDefinition, LayerModifierKind};
 
-use super::manager::InputResult;
+use super::adapter::InputResult;
 
 #[derive(Debug)]
 pub struct LayerManager {

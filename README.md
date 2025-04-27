@@ -136,6 +136,12 @@ Shared global settings, fields:
 
   _Default_: `50` (ms)
 
+- event_poll_timeout: Controls the main event loop interval.
+
+  _Type_: `number`
+
+  _Default_: `1` (ms)
+
 #### `tap_dance`
 
 - `default_timeout`: Fallback tap dance timeout.

@@ -3,7 +3,7 @@ use std::{process::Command, str::FromStr};
 use anyhow::{Result, anyhow};
 use evdev::KeyCode;
 
-use super::manager::InputResult;
+use super::adapter::InputResult;
 
 fn char_to_input(char: char) -> Result<Vec<InputResult>> {
     let result = match char {

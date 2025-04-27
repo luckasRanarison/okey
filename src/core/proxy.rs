@@ -1,56 +1,49 @@
 use anyhow::Result;
-use evdev::{Device, EventType, uinput::VirtualDevice};
+use evdev::{Device, InputEvent, uinput::VirtualDevice};
 use nix::sys::epoll::{Epoll, EpollCreateFlags, EpollEvent, EpollFlags};
 
-use crate::config::schema::{DefaultConfig, KeyboardConfig};
-
-use super::manager::KeyManager;
-
-#[derive(Debug)]
-pub struct EventProxy {
-    device: Device,
-    key_manager: KeyManager,
+pub trait EventProxy {
+    fn emit(&mut self, events: &[InputEvent]) -> Result<()>;
+    fn wait(&mut self, timeout: u16) -> Result<()>;
 }
 
-impl EventProxy {
-    pub fn new(device: Device, config: KeyboardConfig, general: DefaultConfig) -> Result<Self> {
-        let key_manager = KeyManager::new(config, general);
+#[derive(Debug)]
+pub struct InputProxy {
+    epoll: Epoll,
+    event_buffer: [EpollEvent; 1],
+    virtual_device: VirtualDevice,
+}
 
-        Ok(Self {
-            device,
-            key_manager,
-        })
-    }
-
-    pub fn init_hook(&mut self) -> Result<()> {
-        self.device.grab()?;
-        self.device.set_nonblocking(true)?;
+impl InputProxy {
+    pub fn try_from_device(device: &Device) -> Result<Self> {
+        let name = format!("{} (virtual)", device.name().unwrap_or("Unknown device"));
+        let virtual_device = VirtualDevice::builder()?
+            .name(&name)
+            .with_keys(device.supported_keys().unwrap_or_default())?
+            .build()?;
 
         let epoll = Epoll::new(EpollCreateFlags::EPOLL_CLOEXEC)?;
         let event = EpollEvent::new(EpollFlags::EPOLLIN, 0);
-        let epoll_timeout = 1_u16; // milliseconds
+        let event_buffer = [EpollEvent::empty(); 1];
 
-        let mut epoll_buffer = [EpollEvent::empty(); 1];
+        epoll.add(device, event)?;
 
-        epoll.add(&self.device, event)?;
+        Ok(Self {
+            epoll,
+            event_buffer,
+            virtual_device,
+        })
+    }
+}
 
-        let mut virtual_device = VirtualDevice::builder()?
-            .name("okey virtual keyboard")
-            .with_keys(self.device.supported_keys().unwrap_or_default())?
-            .build()?;
+impl EventProxy for InputProxy {
+    fn emit(&mut self, events: &[InputEvent]) -> Result<()> {
+        self.virtual_device.emit(events)?;
+        Ok(())
+    }
 
-        loop {
-            epoll.wait(&mut epoll_buffer, epoll_timeout)?;
-
-            if let Ok(events) = self.device.fetch_events() {
-                for event in events {
-                    if event.event_type() == EventType::KEY {
-                        self.key_manager.process_event(event, &mut virtual_device)?;
-                    }
-                }
-            }
-
-            self.key_manager.post_process(&mut virtual_device)?;
-        }
+    fn wait(&mut self, timeout: u16) -> Result<()> {
+        self.epoll.wait(&mut self.event_buffer, timeout)?;
+        Ok(())
     }
 }

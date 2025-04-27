@@ -7,7 +7,7 @@ use crate::{
     core::buffer::InputBuffer,
 };
 
-use super::manager::InputResult;
+use super::adapter::InputResult;
 
 #[derive(Debug)]
 pub struct ComboManager {

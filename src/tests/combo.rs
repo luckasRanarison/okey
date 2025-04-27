@@ -6,120 +6,109 @@ const CONFIG: &str = include_str!("./config/combos.yaml");
 
 #[test]
 fn test_tap_combo() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::with_config(CONFIG);
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    manager.process(
-        InputBuffer::combo_press(KeyCode::KEY_D, KeyCode::KEY_F),
-        &mut emitter,
-    )?;
+    adapter.process(InputBuffer::combo_press(KeyCode::KEY_D, KeyCode::KEY_F))?;
 
     thread::sleep(Duration::from_millis(20));
 
-    manager.process(
-        InputBuffer::combo_release(KeyCode::KEY_D, KeyCode::KEY_F),
-        &mut emitter,
-    )?;
+    adapter.process(InputBuffer::combo_release(KeyCode::KEY_D, KeyCode::KEY_F))?;
 
     let expected = InputBuffer::tap(KeyCode::KEY_LEFTCTRL);
 
-    assert_eq!(emitter.queue(), expected.value());
+    assert_eq!(proxy.queue(), expected.value());
 
     Ok(())
 }
 
 #[test]
 fn test_macro_combo() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::with_config(CONFIG);
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
     let expected = InputBuffer::new(KeyCode::KEY_H)
         .tap_then(KeyCode::KEY_E)
         .tap_then(KeyCode::KEY_Y)
         .tap();
 
-    manager.process(
-        InputBuffer::combo_press(KeyCode::KEY_U, KeyCode::KEY_I),
-        &mut emitter,
-    )?;
+    adapter.process(InputBuffer::combo_press(KeyCode::KEY_U, KeyCode::KEY_I))?;
 
     thread::sleep(Duration::from_millis(20));
 
-    manager.process(
-        InputBuffer::combo_release(KeyCode::KEY_U, KeyCode::KEY_I),
-        &mut emitter,
-    )?;
+    adapter.process(InputBuffer::combo_release(KeyCode::KEY_U, KeyCode::KEY_I))?;
 
-    assert_eq!(emitter.queue(), expected.value());
+    assert_eq!(proxy.queue(), expected.value());
 
-    emitter.clear();
+    Ok(())
+}
 
-    manager.process(
-        InputBuffer::combo_press(KeyCode::KEY_U, KeyCode::KEY_I),
-        &mut emitter,
-    )?;
+#[test]
+fn test_macro_combo_hold() -> Result<()> {
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    thread::sleep(Duration::from_millis(90));
+    let expected = InputBuffer::new(KeyCode::KEY_H)
+        .tap_then(KeyCode::KEY_E)
+        .tap_then(KeyCode::KEY_Y)
+        .tap();
 
-    manager.process(
-        InputBuffer::combo_hold(KeyCode::KEY_U, KeyCode::KEY_I),
-        &mut emitter,
-    )?;
+    adapter.process(InputBuffer::combo_press(KeyCode::KEY_U, KeyCode::KEY_I))?;
 
     thread::sleep(Duration::from_millis(90));
 
-    manager.process(
-        InputBuffer::combo_release(KeyCode::KEY_U, KeyCode::KEY_I),
-        &mut emitter,
-    )?;
+    adapter.process(InputBuffer::combo_hold(KeyCode::KEY_U, KeyCode::KEY_I))?;
+
+    thread::sleep(Duration::from_millis(90));
+
+    adapter.process(InputBuffer::combo_release(KeyCode::KEY_U, KeyCode::KEY_I))?;
 
     // macros should not repeat on hold
-    assert_eq!(emitter.queue(), expected.value());
+    assert_eq!(proxy.queue(), expected.value());
 
     Ok(())
 }
 
 #[test]
 fn test_expired_combo_key() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::with_config(CONFIG);
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    manager.process(InputBuffer::press(KeyCode::KEY_D), &mut emitter)?;
+    adapter.process(InputBuffer::press(KeyCode::KEY_D))?;
 
     thread::sleep(Duration::from_millis(50));
 
-    manager.process(InputBuffer::release(KeyCode::KEY_D), &mut emitter)?;
+    adapter.process(InputBuffer::release(KeyCode::KEY_D))?;
 
     let expected = InputBuffer::tap(KeyCode::KEY_D);
 
-    assert_eq!(emitter.queue(), expected.value());
+    assert_eq!(proxy.queue(), expected.value());
 
-    emitter.clear();
+    proxy.clear();
 
     Ok(())
 }
 
 #[test]
 fn test_derred_combo_key() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::with_config(CONFIG);
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
     let expected = InputBuffer::new(KeyCode::KEY_D)
         .tap_then(KeyCode::KEY_A)
         .tap();
 
-    manager.process(InputBuffer::press(KeyCode::KEY_D), &mut emitter)?;
+    adapter.process(InputBuffer::press(KeyCode::KEY_D))?;
 
     thread::sleep(Duration::from_millis(60));
 
-    manager.process(
+    adapter.process(
         InputBuffer::new(KeyCode::KEY_D)
             .release_then(KeyCode::KEY_A)
             .tap(),
-        &mut emitter,
     )?;
 
-    assert_eq!(emitter.queue(), expected.value());
+    assert_eq!(proxy.queue(), expected.value());
 
     Ok(())
 }

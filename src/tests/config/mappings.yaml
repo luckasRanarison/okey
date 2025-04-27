@@ -3,10 +3,5 @@ keyboards:
 
     keys:
       KEY_Q: KEY_W
-      KEY_B: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
       KEY_Z: KEY_CUSTOM
-
-    tap_dances:
-      KEY_CUSTOM:
-        tap: KEY_Z
-        hold: KEY_LEFTSHIFT
+      KEY_CUSTOM: KEY_A

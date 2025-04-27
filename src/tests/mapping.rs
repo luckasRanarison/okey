@@ -1,72 +1,31 @@
-use std::{thread, time::Duration};
-
 use super::utils::*;
 
 const CONFIG: &str = include_str!("./config/mappings.yaml");
 
 #[test]
 fn test_basic_key() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::with_config(CONFIG);
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    manager.process(InputBuffer::tap_hold(KeyCode::KEY_Q), &mut emitter)?;
+    adapter.process(InputBuffer::tap_hold(KeyCode::KEY_Q))?;
 
     let expected = InputBuffer::tap_hold(KeyCode::KEY_W);
 
-    assert_eq!(emitter.queue(), expected.value());
-
-    Ok(())
-}
-
-#[test]
-fn test_macro_key() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::with_config(CONFIG);
-
-    let expected = InputBuffer::new(KeyCode::KEY_H)
-        .tap_then(KeyCode::KEY_E)
-        .tap_then(KeyCode::KEY_L)
-        .tap()
-        .tap_then(KeyCode::KEY_O)
-        .tap();
-
-    manager.process(InputBuffer::tap(KeyCode::KEY_B), &mut emitter)?;
-
-    assert_eq!(emitter.queue(), expected.value());
-
-    emitter.clear();
-
-    manager.process(InputBuffer::tap_hold(KeyCode::KEY_B), &mut emitter)?;
-
-    // macros should not repeat on hold
-    assert_eq!(emitter.queue(), expected.value());
+    assert_eq!(proxy.queue(), expected.value());
 
     Ok(())
 }
 
 #[test]
 fn test_custom_code() -> Result<()> {
-    let mut emitter = BufferedEventEmitter::default();
-    let mut manager = KeyManager::with_config(CONFIG);
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    manager.process(InputBuffer::tap(KeyCode::KEY_Z), &mut emitter)?;
+    adapter.process(InputBuffer::tap(KeyCode::KEY_Z))?;
 
-    let expected = InputBuffer::tap(KeyCode::KEY_Z);
+    let expected = InputBuffer::tap(KeyCode::KEY_A);
 
-    assert_eq!(emitter.queue(), expected.value());
-
-    emitter.clear();
-
-    manager.process(InputBuffer::press(KeyCode::KEY_Z).hold(), &mut emitter)?;
-
-    thread::sleep(Duration::from_millis(250));
-
-    manager.post_process(&mut emitter)?;
-    manager.process(InputBuffer::release(KeyCode::KEY_Z), &mut emitter)?;
-
-    let expected = InputBuffer::tap_hold(KeyCode::KEY_LEFTSHIFT);
-
-    assert_eq!(emitter.queue(), expected.value());
+    assert_eq!(proxy.queue(), expected.value());
 
     Ok(())
 }

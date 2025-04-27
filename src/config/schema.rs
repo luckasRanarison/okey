@@ -13,8 +13,11 @@ pub struct Config {
 
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct DefaultConfig {
+    #[serde(default)]
     pub tap_dance: DefaultTapDanceConfig,
+    #[serde(default)]
     pub combo: DefaultComboConfig,
+    #[serde(default)]
     pub general: GeneralConfig,
 }
 
@@ -48,6 +51,8 @@ impl Default for DefaultComboConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GeneralConfig {
+    #[serde(default = "defaults::event_poll_timeout")]
+    pub event_poll_timeout: u16,
     #[serde(default = "defaults::deferred_key_delay")]
     pub deferred_key_delay: u16,
     #[serde(default = "defaults::unicode_input_delay")]
@@ -57,6 +62,7 @@ pub struct GeneralConfig {
 impl Default for GeneralConfig {
     fn default() -> Self {
         Self {
+            event_poll_timeout: defaults::event_poll_timeout(),
             deferred_key_delay: defaults::deferred_key_delay(),
             unicode_input_delay: defaults::unicode_input_delay(),
         }

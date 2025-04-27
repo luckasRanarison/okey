@@ -1,8 +1,9 @@
 #[rustfmt::skip]
 mod constants {
+    pub fn event_poll_timeout() -> u16 { 1 }
     pub fn combo_threshold() -> u16 { 50 }
     pub fn tap_dance_timeout() -> u16 { 200 }
-    pub fn deferred_key_delay() -> u16 { 80 }
+    pub fn deferred_key_delay() -> u16 { 20 }
     pub fn unicode_input_delay() -> u16 { 50 }
 }
 

@@ -4,7 +4,7 @@ use ringbuffer::{ConstGenericRingBuffer, RingBuffer};
 
 use crate::config::schema::KeyCode;
 
-use super::manager::InputResult;
+use super::adapter::InputResult;
 
 const BUFFER_SIZE: usize = 10;
 const DEFER_BUFFER_SIZE: usize = 3;

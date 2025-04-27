@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use nix::unistd::{self, ForkResult};
 
 use crate::{
-    core::EventProxy,
+    core::{InputProxy, KeyAdapter},
     fs::{config::read_config, device::find_device_by_name},
 };
 
@@ -14,15 +14,14 @@ pub fn start(config_path: Option<String>) -> Result<()> {
     let handles = parsed.keyboards.into_iter().map(|keyboard| {
         let defaults = parsed.defaults.clone();
 
-        thread::spawn(|| -> Result<()> {
-            let device = find_device_by_name(&keyboard.name)?;
+        thread::spawn(move || -> Result<()> {
+            let mut device = find_device_by_name(&keyboard.name)?
+                .ok_or(anyhow!("Device not found: {}", keyboard.name))?;
 
-            let mut event_proxy = match device {
-                Some(device) => EventProxy::new(device, keyboard, defaults),
-                None => Err(anyhow!("Device not found")),
-            }?;
+            let mut proxy = InputProxy::try_from_device(&device)?;
+            let mut adapter = KeyAdapter::new(keyboard, defaults, &mut proxy);
 
-            event_proxy.init_hook()
+            adapter.hook(&mut device)
         })
     });
 

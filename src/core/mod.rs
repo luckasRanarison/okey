@@ -1,17 +1,15 @@
+mod adapter;
 mod buffer;
 mod combo;
 mod event;
 mod input;
 mod layer;
-mod manager;
 mod mapping;
 mod proxy;
 mod tap_dance;
 
-pub use proxy::EventProxy;
+pub use adapter::KeyAdapter;
+pub use proxy::InputProxy;
 
 #[cfg(test)]
-pub mod test_utils {
-    pub use super::event::EventEmitter;
-    pub use super::manager::KeyManager;
-}
+pub use proxy::EventProxy;

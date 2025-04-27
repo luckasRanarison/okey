@@ -1,32 +1,34 @@
+use std::{thread, time::Duration};
+
 use evdev::{EventType, InputEvent};
 
-use crate::config::schema::Config;
+use crate::{config::schema::Config, core::EventProxy};
 
 pub trait EventProcessor {
-    fn process_input<E: EventEmitter>(&mut self, event: InputEvent, emitter: &mut E) -> Result<()>;
+    fn process_input(&mut self, event: InputEvent) -> Result<()>;
 
-    fn process<E: EventEmitter>(&mut self, buffer: InputBuffer, emitter: &mut E) -> Result<()> {
+    fn process(&mut self, buffer: InputBuffer) -> Result<()> {
         for event in buffer.value() {
-            self.process_input(*event, emitter)?;
+            self.process_input(*event)?;
         }
 
         Ok(())
     }
 }
 
-impl EventProcessor for KeyManager {
-    fn process_input<E: EventEmitter>(&mut self, event: InputEvent, emitter: &mut E) -> Result<()> {
-        self.process_event(event, emitter)?;
-        self.post_process(emitter)
+impl<P: EventProxy> EventProcessor for KeyAdapter<'_, P> {
+    fn process_input(&mut self, event: InputEvent) -> Result<()> {
+        self.process_event(event)?;
+        self.post_process()
     }
 }
 
 #[derive(Debug, Default)]
-pub struct BufferedEventEmitter {
+pub struct EventProxyMock {
     queue: Vec<InputEvent>,
 }
 
-impl BufferedEventEmitter {
+impl EventProxyMock {
     pub fn queue(&self) -> &[InputEvent] {
         &self.queue
     }
@@ -36,20 +38,25 @@ impl BufferedEventEmitter {
     }
 }
 
-impl EventEmitter for BufferedEventEmitter {
+impl EventProxy for EventProxyMock {
     fn emit(&mut self, events: &[evdev::InputEvent]) -> anyhow::Result<()> {
         self.queue.extend(events);
         Ok(())
     }
+
+    fn wait(&mut self, timeout: u16) -> Result<()> {
+        thread::sleep(Duration::from_millis(timeout.into()));
+        Ok(())
+    }
 }
 
-impl KeyManager {
-    pub fn with_config(config: &str) -> Self {
+impl<'a, P: EventProxy> KeyAdapter<'a, P> {
+    pub fn with_config(config: &str, proxy: &'a mut P) -> Self {
         let mut config: Config = serde_yaml::from_str(config).unwrap();
         let keyboard = config.keyboards.remove(0);
         let defaults = config.defaults.clone();
 
-        KeyManager::new(keyboard, defaults)
+        KeyAdapter::new(keyboard, defaults, proxy)
     }
 }
 
@@ -208,4 +215,4 @@ fn hold(code: KeyCode) -> InputEvent {
 pub use anyhow::Result;
 pub use evdev::KeyCode;
 
-pub use crate::core::test_utils::*;
+pub use crate::core::KeyAdapter;
