@@ -52,10 +52,14 @@
     },
     "keyboards": {
       "type": "array",
+      "description": "Per keyboard configuration",
       "items": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
+          "name": {
+            "type": "string",
+            "description": "The name of the keyboard as an input device"
+          },
           "keys": {
             "description": "Key mappings for the main layer",
             "type": "object",
@@ -71,7 +75,6 @@
           "tap_dances": {
             "type": "object",
             "description": "Dual function keys on tap/hold",
-            "items": { "$ref": "#/$defs/ComboDefinition" },
             "additionalProperties": {
               "$ref": "#/$defs/TapDanceConfig"
             }
@@ -115,9 +118,13 @@
     "LayerDefinition": {
       "type": "object",
       "properties": {
-        "modifier": { "$ref": "#/$defs/LayerModifierConfig" },
+        "modifier": {
+          "$ref": "#/$defs/LayerModifierConfig",
+          "description": "Layer activation and behavior"
+        },
         "keys": {
           "type": "object",
+          "description": "Key mappings for the current layer",
           "additionalProperties": { "$ref": "#/$defs/KeyAction" }
         }
       },
@@ -130,9 +137,10 @@
         {
           "type": "object",
           "properties": {
-            "key": { "type": "string" },
+            "key": { "type": "string", "description": "Layer activation key" },
             "type": {
               "type": "string",
+              "description": "Layer activation behavior",
               "enum": ["momentary", "toggle", "oneshoot"]
             }
           },
@@ -160,50 +168,88 @@
             {
               "type": "object",
               "required": ["press"],
-              "properties": { "press": { "type": "string" } },
+              "properties": {
+                "press": {
+                  "type": "string",
+                  "description": "Keycode press event"
+                }
+              },
               "additionalProperties": false
             },
             {
               "type": "object",
               "required": ["hold"],
-              "properties": { "hold": { "type": "string" } },
+              "properties": {
+                "hold": {
+                  "type": "string",
+                  "description": "Keycode hold event"
+                }
+              },
               "additionalProperties": false
             },
             {
               "type": "object",
               "required": ["release"],
-              "properties": { "release": { "type": "string" } },
+              "properties": {
+                "release": {
+                  "type": "string",
+                  "description": "Keycode release event"
+                }
+              },
               "additionalProperties": false
             },
             {
               "type": "object",
               "required": ["delay"],
-              "properties": { "delay": { "type": "integer" } },
+              "properties": {
+                "delay": {
+                  "type": "integer",
+                  "description": "Wait a given delay in milliseconds"
+                }
+              },
               "additionalProperties": false
             },
             {
               "type": "object",
               "required": ["string"],
-              "properties": { "string": { "type": "string" } },
+              "properties": {
+                "string": { "type": "string", "description": "ASCII string" }
+              },
               "additionalProperties": false
             },
             {
               "required": ["env"],
-              "properties": { "env": { "type": "string" } },
+              "properties": {
+                "env": {
+                  "type": "string",
+                  "description": "Environment variable name"
+                }
+              },
               "additionalProperties": false
             },
             {
               "type": "object",
               "required": ["unicode"],
-              "properties": { "unicode": { "type": "string" } },
+              "properties": {
+                "unicode": {
+                  "type": "string",
+                  "description": "Unicode characters"
+                }
+              },
               "additionalProperties": false
             },
             {
               "type": "object",
               "required": ["shell"],
               "properties": {
-                "shell": { "type": "string" },
-                "trim": { "type": "boolean" }
+                "shell": {
+                  "type": "string",
+                  "description": "Bash shell command"
+                },
+                "trim": {
+                  "type": "boolean",
+                  "description": "Whether to trim trailing whitespaces or not"
+                }
               },
               "additionalProperties": false
             }

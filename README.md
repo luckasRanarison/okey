@@ -132,7 +132,7 @@ Use `okey --help` to see all the available commands.
 The configuration for okey is written in [YAML](https://yaml.org/), it defines how `okey` remaps keys and sets up advanced behaviors. You can check the [examples](./examples/) folder for practical use cases.
 
 > [!TIP]
->  If you are using [yaml-language-server](https://github.com/redhat-developer/yaml-language-server), you can get autocompletion and other language server features by adding the following at the top of your file:
+>  If you are using [yaml-language-server](https://github.com/redhat-developer/yaml-language-server), you can get autocompletion and IDE support by adding the following at the top of your file:
 > ```yaml 
 > # yaml-language-server: $schema=https://raw.githubusercontent.com/luckasRanarison/okey/refs/heads/master/schema/okey.json
 > ```
