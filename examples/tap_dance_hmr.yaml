@@ -5,6 +5,7 @@ keyboards:
       KEY_A:
         tap: KEY_A
         hold: KEY_LEFTMETA
+        # timeout: 250 (default: 200ms)
 
       KEY_S:
         tap: KEY_S

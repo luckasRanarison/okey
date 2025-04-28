@@ -9,6 +9,7 @@ keyboards:
       KEY_CAPSLOCK:
         tap: KEY_TAB
         hold: KEY_MOMLAYER
+        # timeout: 200
 
     layers:
       momentary:

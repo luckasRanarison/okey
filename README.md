@@ -1,3 +1,13 @@
+<div align="center">
+
+<img src="./assets/logo.svg" alt="okey" width=150><br>
+
+![Build](https://img.shields.io/github/actions/workflow/status/luckasranarison/okey/ci.yml?style=for-the-badge&label=Build&labelColor=3b434b&color=30c352)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&labelColor=3b434b&color=blue)](https://github.com/luckasRanarison/luckasranarison.github.io/blob/master/LICENSE)
+![Stars](https://img.shields.io/github/stars/luckasranarison/okey?style=for-the-badge&label=Stars&labelColor=3b434b&color=yellow)
+
+</div>
+
 # okey
 
 An advanced, easy-to-use key remapper for Linux written in Rust, inspired by [QMK](https://qmk.fm/).
@@ -52,12 +62,63 @@ okey start --config ./path/to/config/okey.yaml --daemon # to run as a daemon in 
 
 To use `okey` as sysmted a service at the user level, you can use the following commands:
 
+<details>
+
+<summary><code>okey.service</code> (expand)</summary><br>
+
+```ini
+[Unit]
+Description=Okey Service
+
+[Service]
+ExecStart=/usr/bin/okey start --systemd
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+Nice=-20
+
+[Install]
+WantedBy=multi-user.target
+```
+
+</details>
+
 ```bash
 okey service install # creates the okey.service file at ~/.config/systemd/
 okey service start # shorthand for systemctl --user enable okey && systemctl --user start okey
+
+okey service stop # shorthand for systemctl --user stop okey && systemctl --user disable okey
+okey service restart # shorthand for systemctl --user restart okey
+okey service status # shorthand for systemctl --user status okey
+okey service uninstall # disables the service and remove the okey.service file
 ```
 
 But to get access to higher priority settings and capabilities, it is recommended to install `okey` at the root level.
+
+<details>
+
+<summary><code>okey.service</code> (expand)</summary><br>
+
+```ini
+[Unit]
+Description=Okey Service
+
+[Service]
+ExecStart=/usr/bin/okey start --systemd
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+Nice=-20
+CPUSchedulingPolicy=rr
+CPUSchedulingPriority=99
+IOSchedulingClass=realtime
+IOSchedulingPriority=0
+
+[Install]
+WantedBy=multi-user.target
+```
+
+</details>
 
 ```bash
 sudo okey service install # creates the okey.service file at /etc/systemd/system/
@@ -783,13 +844,11 @@ Key mappings for the main layer.
 
 _Type_: `Record<KeyCode, KeyAction>`
 
-
 #### `tap_dances` (optional)
 
 Dual function keys on tap/hold.
 
 _Type_: `Record<KeyCode, TapDance>`
-
 
 #### `combos` (optional)
 
@@ -797,13 +856,11 @@ List of combo mappings.
 
 _Type_: `Combo[]`
 
-
 #### `layers` (optional)
 
 Virtual layers (shift-like).
 
 _Type_: `Record<string, Layer>`
-
 
 ## License
 

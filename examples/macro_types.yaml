@@ -1,0 +1,30 @@
+keyboards:
+  - name: "My keyboard"
+
+    keys:
+      KEY_F1: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O] # executes simple key sequences (press + release)
+      KEY_F2: { string: "Hi, you!" } # inserts an ASCII string
+      KEY_F3: { env: FOO } # inserts the value of the environment variable
+      KEY_F4: { unicode: 🙂👍 } # inserts unicode characters using CTRL + SHIFT + U + <code> + ENTER
+      KEY_F5: { shell: "echo 'foo'", trim: true } # inserts shell script output
+
+      KEY_F6: [
+          { press: KEY_O },
+          { hold: KEY_O },
+          { delay: 1000 },
+          { release: KEY_O },
+          KEY_K, # press + release
+        ] # executes detailed key sequences
+
+      KEY_F7: [{ env: USERNAME }, { string: "@gmail.com" }] # all types of macro are composable
+
+      KEY_F8:
+        [
+          { string: "Hello, " },
+          { env: USERNAME },
+          { string: "!" },
+          { delay: 500 },
+          { string: " Today is: " },
+          { shell: "date '+%A, %B %d, %Y'", trim: true },
+          KEY_ENTER,
+        ]
