@@ -840,7 +840,7 @@ Fields:
 
 #### `name`
 
-Name of the keyboard as an input device, use `cat /proc/bus/input/devices`.
+Name of the keyboard as an input device, you can use `okey device list --keyboard` to find the name of a keyboard.
 
   _Type_: `string`
 

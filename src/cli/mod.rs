@@ -36,6 +36,12 @@ pub enum Command {
         #[command(subcommand)]
         command: SystemdSubcommand,
     },
+
+    /// Utility commands for debugging input devices
+    Device {
+        #[command(subcommand)]
+        command: DeviceSubcommand,
+    },
 }
 
 #[derive(Parser, Debug)]
@@ -52,4 +58,14 @@ pub enum SystemdSubcommand {
     Install,
     /// Disable and remove the service file
     Uninstall,
+}
+
+#[derive(Parser, Debug)]
+pub enum DeviceSubcommand {
+    /// List all input devices that support keys
+    List {
+        /// Whether to only show keyboards
+        #[arg(short, long, default_value_t = false)]
+        keyboard: bool,
+    },
 }

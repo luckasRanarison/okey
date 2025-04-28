@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use okey::cli::{Cli, Command, SystemdSubcommand, commands};
+use okey::cli::{commands, Cli, Command, DeviceSubcommand, SystemdSubcommand};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -22,6 +22,10 @@ fn main() -> Result<()> {
             SystemdSubcommand::Status => commands::service::status(),
             SystemdSubcommand::Install => commands::service::install(),
             SystemdSubcommand::Uninstall => commands::service::uninstall(),
+        },
+
+        Command::Device { command } => match command {
+            DeviceSubcommand::List { keyboard } => commands::device::list(keyboard),
         },
     }
 }
