@@ -1,0 +1,27 @@
+keyboards:
+  - name: "My keyboard"
+
+    combos:
+      - keys: [KEY_A, KEY_S]
+        action: KEY_LEFTMETA
+
+      - keys: [KEY_S, KEY_D]
+        action: KEY_LEFTSHIFT
+
+      - keys: [KEY_D, KEY_F]
+        action: KEY_LEFTCTRL
+
+      - keys: [KEY_S, KEY_F]
+        action: KEY_LEFTALT
+
+      - keys: [KEY_J, KEY_K]
+        action: KEY_RIGHTCTRL
+
+      - keys: [KEY_K, KEY_L]
+        action: KEY_RIGHTSHIFT
+
+      - keys: [KEY_J, KEY_L]
+        action: KEY_RIGHTALT
+
+      - keys: [KEY_L, KEY_SEMICOLON]
+        action: KEY_RIGHTMETA

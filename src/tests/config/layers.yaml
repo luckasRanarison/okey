@@ -1,5 +1,5 @@
 keyboards:
-  - name: "AT Translated Set 2 keyboard"
+  - name: "Layer test keyboard"
 
     tap_dances:
       KEY_A:

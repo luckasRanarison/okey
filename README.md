@@ -57,7 +57,7 @@ okey service install # creates the okey.service file at ~/.config/systemd/
 okey service start # shorthand for systemctl --user enable okey && systemctl --user start okey
 ```
 
-But to get access to higher priority settings and capabilities, it is recommended to install okey at the root level.
+But to get access to higher priority settings and capabilities, it is recommended to install `okey` at the root level.
 
 ```bash
 sudo okey service install # creates the okey.service file at /etc/systemd/system/
@@ -68,65 +68,9 @@ Use `okey --help` to see all the available commands.
 
 ## Configuration Schema
 
-The configuration for okey is written in [YAML](https://yaml.org/), and here is a sample:
+The configuration for okey is written in [YAML](https://yaml.org/), it defines how `okey` remaps keys and sets up advanced behaviors. You can check the [examples](./examples/) folder for practical use cases.
 
-<details>
-
-<summary>Expand</summary>
-
-```yaml
-defaults:
-  general:
-    deferred_key_delay: 80
-  tap_dance:
-    default_timeout: 200
-  combo:
-    default_threshold: 50
-
-keyboards:
-  - name: "AT Translated Set 2 keyboard"
-
-    keys:
-      KEY_Q: KEY_A
-      KEY_CAPSLOCK: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O]
-
-      KEY_M:
-        [
-          { press: KEY_LEFTSHIFT },
-          { hold: KEY_LEFTSHIFT },
-          { press: KEY_O },
-          { release: KEY_O },
-          { delay: 500 },
-          KEY_K, # press + release
-        ]
-
-      KEY_R: [{ string: "Hello " } , { env: USERNAME }]
-      KEY_T: { unicode: 🙂👍 }
-      KEY_Y: { shell: 'date "+%d %B %Y"', trim: true }
-
-    combos:
-      - keys: [KEY_D, KEY_F]
-        action: KEY_LEFTCTRL
-
-    tap_dances:
-      KEY_S:
-        tap: KEY_S
-        hold: KEY_LEFTSHIFT
-        timeout: 250
-
-    layers:
-      my_layer:
-        modifier:
-          key: KEY_C
-          type: toggle # | oneshoot | momentary (default: momentary)
-        keys:
-          KEY_A: KEY_D
-```
-
-</details>
-
-
-Your configuration file defines how `okey` remaps keys and sets up advanced behaviors. Here's a breakdown of the schema:
+Here's a breakdown of the schema:
 
 ### `defaults` (optional)
 

@@ -1,0 +1,35 @@
+keyboards:
+  - name: "My keyboard"
+
+    tap_dances:
+      KEY_A:
+        tap: KEY_A
+        hold: KEY_LEFTMETA
+
+      KEY_S:
+        tap: KEY_S
+        hold: KEY_LEFTSHIFT
+
+      KEY_D:
+        tap: KEY_D
+        hold: KEY_LEFTALT
+
+      KEY_F:
+        tap: KEY_F
+        hold: KEY_LEFTCTRL
+
+      KEY_J:
+        tap: KEY_J
+        hold: KEY_RIGHTCTRL
+
+      KEY_K:
+        tap: KEY_K
+        hold: KEY_RIGHTALT
+
+      KEY_L:
+        tap: KEY_L
+        hold: KEY_RIGHTSHIFT
+
+      KEY_SEMICOLON:
+        tap: KEY_F
+        hold: KEY_RIGHTMETA
