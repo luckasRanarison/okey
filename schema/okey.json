@@ -1,0 +1,215 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Config",
+  "type": "object",
+  "required": ["keyboards"],
+  "additionalProperties": false,
+  "properties": {
+    "defaults": {
+      "type": "object",
+      "description": "Shared global settings",
+      "properties": {
+        "tap_dance": {
+          "type": "object",
+          "properties": {
+            "default_timeout": {
+              "type": "integer",
+              "description": "Fallback tap dance timeout"
+            }
+          },
+          "additionalProperties": false
+        },
+        "combo": {
+          "type": "object",
+          "properties": {
+            "default_threshold": {
+              "type": "integer",
+              "description": "Delay for inserting unicode codepoints with macro"
+            }
+          },
+          "additionalProperties": false
+        },
+        "general": {
+          "type": "object",
+          "properties": {
+            "event_poll_timeout": {
+              "type": "integer",
+              "description": "Main event loop interval"
+            },
+            "deferred_key_delay": {
+              "type": "integer",
+              "description": "Delay for keys following non-acknowledged special keys"
+            },
+            "unicode_input_delay": {
+              "type": "integer",
+              "description": "Delay for inserting unicode codepoints with macro"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "keyboards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "keys": {
+            "description": "Key mappings for the main layer",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/KeyAction"
+            }
+          },
+          "combos": {
+            "type": "array",
+            "description": "List of combo mappings",
+            "items": { "$ref": "#/$defs/ComboDefinition" }
+          },
+          "tap_dances": {
+            "type": "object",
+            "description": "Dual function keys on tap/hold",
+            "items": { "$ref": "#/$defs/ComboDefinition" },
+            "additionalProperties": {
+              "$ref": "#/$defs/TapDanceConfig"
+            }
+          },
+          "layers": {
+            "type": "object",
+            "description": "Virtual layers (shift-like)",
+            "additionalProperties": {
+              "$ref": "#/$defs/LayerDefinition"
+            }
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "ComboDefinition": {
+      "type": "object",
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "action": { "$ref": "#/$defs/KeyAction" }
+      },
+      "required": ["keys", "action"],
+      "additionalProperties": false
+    },
+    "TapDanceConfig": {
+      "type": "object",
+      "properties": {
+        "timeout": { "type": "integer" },
+        "tap": { "$ref": "#/$defs/KeyAction" },
+        "hold": { "$ref": "#/$defs/KeyAction" }
+      },
+      "required": ["tap", "hold"],
+      "additionalProperties": false
+    },
+    "LayerDefinition": {
+      "type": "object",
+      "properties": {
+        "modifier": { "$ref": "#/$defs/LayerModifierConfig" },
+        "keys": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/KeyAction" }
+        }
+      },
+      "required": ["modifier", "keys"],
+      "additionalProperties": false
+    },
+    "LayerModifierConfig": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "key": { "type": "string" },
+            "type": {
+              "type": "string",
+              "enum": ["momentary", "toggle", "oneshoot"]
+            }
+          },
+          "required": ["key"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "KeyAction": { "$ref": "#/$defs/Macro" },
+    "Macro": {
+      "oneOf": [
+        { "$ref": "#/$defs/EventMacro" },
+        {
+          "type": "array",
+          "items": { "$ref": "#/$defs/EventMacro" }
+        }
+      ]
+    },
+    "EventMacro": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["press"],
+              "properties": { "press": { "type": "string" } },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["hold"],
+              "properties": { "hold": { "type": "string" } },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["release"],
+              "properties": { "release": { "type": "string" } },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["delay"],
+              "properties": { "delay": { "type": "integer" } },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["string"],
+              "properties": { "string": { "type": "string" } },
+              "additionalProperties": false
+            },
+            {
+              "required": ["env"],
+              "properties": { "env": { "type": "string" } },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["unicode"],
+              "properties": { "unicode": { "type": "string" } },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["shell"],
+              "properties": {
+                "shell": { "type": "string" },
+                "trim": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

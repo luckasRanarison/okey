@@ -1,14 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/luckasRanarison/okey/refs/heads/master/schema/okey.json
+
+defaults:
+  general:
+    deferred_key_delay: 20 # Delay for inserting keys following a non-acknowledged special key
+    unicode_input_delay: 50 # Delay for inserting unicode macros to allow correct flushing
+    event_poll_timeout: 1 # Main event loop interval
+
+  tap_dance:
+    default_timeout: 200 # Fallback tap dance timeout
+
+  combo:
+    default_threshold: 50 # Combo detection window
+
 keyboards:
   - name: "My keyboard"
-
-    defaults:
-      general:
-        deferred_key_delay: 20 # Delay for inserting keys following a non-acknowledged special key
-        unicode_input_delay: 50 # Delay for inserting unicode macros to allow correct flushing
-        event_poll_timeout: 1 # Main event loop interval
-
-      tap_dance:
-        default_timeout: 200 # Fallback tap dance timeout
-
-      combo:
-        default_threshold: 50 # Combo detection window
+    keys: {}
