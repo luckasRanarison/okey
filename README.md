@@ -40,21 +40,28 @@ cd okey && cargo install --path .
 
 ## Usage
 
-`okey` is meant to be used as a [systemd](https://github.com/systemd/systemd) service and expects a configuration file at `~/.config/okey/config.yaml` (see the [schema](#configuration-schema)).
+`okey` is designed to be used as a [systemd](https://github.com/systemd/systemd) service. It expects a configuration file at `~/.config/okey/config.yaml` when installed at the user level, or at `/etc/okey/config.yaml` when installed with root priviledges (see the [schema](#configuration-schema)).
 
 For simple testing, you can use the `start` command to activate keymaps.
 
 ```bash
 okey start # using ~/.config/okey/config.yaml
 okey start --config ./path/to/config/okey.yaml
-okey start --config ./path/to/config/okey.yaml --daemon
+okey start --config ./path/to/config/okey.yaml --daemon # to run as a daemon in the background
 ```
 
-To run `okey` as a service, you can use the following commands:
+To use `okey` as sysmted a service at the user level, you can use the following commands:
 
 ```bash
-okey service install # creates the okey.service file
+okey service install # creates the okey.service file at ~/.config/systemd/
 okey service start # shorthand for systemctl --user enable okey && systemctl --user start okey
+```
+
+But to get access to higher priority settings and capabilities, it is recommended to install okey at the root level.
+
+```bash
+sudo okey service install # creates the okey.service file at /etc/systemd/system/
+sudo okey service start # shorthand for systemctl enable okey && systemctl start okey
 ```
 
 Use `okey --help` to see all the available commands.

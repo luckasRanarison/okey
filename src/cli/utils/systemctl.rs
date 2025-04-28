@@ -1,10 +1,15 @@
 use std::process::{Command, Stdio};
 
 use anyhow::Result;
+use nix::unistd;
 
 fn systemctl(args: &[&str]) -> Result<()> {
+    let args = match unistd::geteuid().is_root() {
+        true => args.to_vec(),
+        false => [&["--user"], args].concat(),
+    };
+
     Command::new("systemctl")
-        .arg("--user")
         .args(args)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -32,9 +37,12 @@ pub fn stop() -> Result<()> {
 }
 
 pub fn status() -> Result<()> {
-    Command::new("systemctl")
-        .args(["--user", "status", "okey"])
-        .status()?;
+    let args = match unistd::geteuid().is_root() {
+        true => vec!["status", "okey"],
+        false => vec!["--user", "status", "okey"],
+    };
+
+    Command::new("systemctl").args(args).status()?;
 
     Ok(())
 }

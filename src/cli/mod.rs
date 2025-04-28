@@ -21,6 +21,14 @@ pub enum Command {
         /// Whether to start the process as a daemon
         #[arg(short, long, default_value_t = false)]
         daemon: bool,
+
+        #[arg(
+            long,
+            hide_short_help = true,
+            hide_long_help = true,
+            default_value_t = false
+        )]
+        systemd: bool,
     },
 
     /// Utility commands for the systemd service

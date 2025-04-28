@@ -1,13 +1,15 @@
 use std::env;
 
 use anyhow::{Result, anyhow};
+use nix::unistd;
 
-use crate::{cli::utils::systemctl, fs::config as fs};
+use crate::{cli::utils::systemctl, fs::service as fs};
 
 pub use systemctl::{restart, status, stop};
 
 pub fn start() -> Result<()> {
-    let file_path = fs::get_systemd_service_path()?;
+    let dir_path = fs::get_systemd_dir_path()?;
+    let file_path = fs::resolve_service_file_path(&dir_path);
 
     if !file_path.exists() {
         return Err(anyhow!(
@@ -30,14 +32,23 @@ pub fn install() -> Result<()> {
 Description=Okey Service
 
 [Service]
-ExecStart={exe_path_str} start
+ExecStart={exe_path_str} start --systemd
 Restart=on-failure
-Nice=-10
-IOSchedulingClass=real-time
-IOSchedulingPriority=0
+StandardOutput=journal
+StandardError=journal
+Nice=-20{}
 
 [Install]
-WantedBy=multi-user.target"#
+WantedBy=multi-user.target"#,
+        if unistd::geteuid().is_root() {
+            r#"
+CPUSchedulingPolicy=rr
+CPUSchedulingPriority=99
+IOSchedulingClass=realtime
+IOSchedulingPriority=0"#
+        } else {
+            ""
+        }
     );
 
     fs::write_systemd_service(&config)?;
@@ -48,7 +59,8 @@ WantedBy=multi-user.target"#
 }
 
 pub fn uninstall() -> Result<()> {
-    let file_path = fs::get_systemd_service_path()?;
+    let dir_path = fs::get_systemd_dir_path()?;
+    let file_path = fs::resolve_service_file_path(&dir_path);
 
     if file_path.exists() {
         systemctl::stop()?;

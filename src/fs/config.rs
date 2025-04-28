@@ -1,18 +1,20 @@
-use std::{
-    env, fs, io,
-    path::{Path, PathBuf},
-};
+use std::{env, fs, io, path::Path};
 
 use anyhow::{Result, anyhow};
+use nix::unistd;
 
 use crate::config::schema::Config;
 
 pub fn get_config_dir_path() -> Result<String> {
-    let home_path = env::var("HOME")?;
-    let default_path = Path::new(&home_path).join(".config/okey");
-    let default_path_str = default_path.to_string_lossy().to_string();
+    if unistd::geteuid().is_root() {
+        Ok("/etc/okey".to_string())
+    } else {
+        let home_path = env::var("HOME")?;
+        let default_path = Path::new(&home_path).join(".config/okey");
+        let default_path_str = default_path.to_string_lossy().to_string();
 
-    Ok(default_path_str)
+        Ok(default_path_str)
+    }
 }
 
 pub fn get_default_config_path() -> Result<String> {
@@ -35,30 +37,4 @@ pub fn read_config(path: Option<String>) -> Result<Config> {
         .and_then(|config| Ok(serde_yaml::from_str(&config)?))?;
 
     Ok(parsed)
-}
-
-pub fn write_systemd_service(config: &str) -> Result<()> {
-    let home_path = env::var("HOME")?;
-    let dir_path = Path::new(&home_path).join(".config/systemd/user");
-    let file_path = dir_path.join("okey.service");
-
-    fs::create_dir_all(dir_path)?;
-    fs::write(file_path, config)?;
-
-    Ok(())
-}
-
-pub fn get_systemd_service_path() -> Result<PathBuf> {
-    let home_path = env::var("HOME")?;
-    let file_path = Path::new(&home_path).join(".config/systemd/user/okey.service");
-
-    Ok(file_path)
-}
-
-pub fn remove_systemd_service() -> Result<()> {
-    let file_path = get_systemd_service_path()?;
-
-    fs::remove_file(file_path)?;
-
-    Ok(())
 }
