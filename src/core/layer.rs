@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use smallvec::SmallVec;
+
 use crate::config::schema::{KeyAction, LayerDefinition, LayerModifierKind};
 
 use super::adapter::InputResult;
@@ -7,7 +9,7 @@ use super::adapter::InputResult;
 #[derive(Debug)]
 pub struct LayerManager {
     layer_map: HashMap<u16, LayerDefinition>,
-    layer_stack: Vec<u16>,
+    layer_stack: SmallVec<[u16; 5]>,
 }
 
 impl LayerManager {
@@ -17,7 +19,7 @@ impl LayerManager {
                 .into_values()
                 .map(|value| (value.modifier.get_modifer().value(), value))
                 .collect(),
-            layer_stack: Vec::with_capacity(5),
+            layer_stack: SmallVec::default(),
         }
     }
 
