@@ -57,6 +57,8 @@ pub struct GeneralConfig {
     pub deferred_key_delay: u16,
     #[serde(default = "defaults::unicode_input_delay")]
     pub unicode_input_delay: u16,
+    #[serde(default = "defaults::maximum_lookup_depth")]
+    pub maximum_lookup_depth: u8,
 }
 
 impl Default for GeneralConfig {
@@ -65,6 +67,7 @@ impl Default for GeneralConfig {
             event_poll_timeout: defaults::event_poll_timeout(),
             deferred_key_delay: defaults::deferred_key_delay(),
             unicode_input_delay: defaults::unicode_input_delay(),
+            maximum_lookup_depth: defaults::maximum_lookup_depth(),
         }
     }
 }

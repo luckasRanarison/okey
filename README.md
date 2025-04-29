@@ -129,7 +129,7 @@ Use `okey --help` to see all the available commands.
 
 ## Configuration Schema
 
-The configuration for okey is written in [YAML](https://yaml.org/), it defines how `okey` remaps keys and sets up advanced behaviors. You can check the [examples](./examples/) folder for practical use cases.
+The configuration for okey is written in [YAML](https://yaml.org/), it defines how `okey` remaps keys and sets up advanced behaviors. Check out the [examples](./examples/) folder for practical use cases.
 
 > [!TIP]
 >  If you are using [yaml-language-server](https://github.com/redhat-developer/yaml-language-server), you can get autocompletion and IDE support by adding the following at the top of your file:
@@ -149,7 +149,7 @@ Shared global settings, fields:
 
   _Type_: `number`
 
-  _Default_: `80` (ms)
+  _Default_: `10` (ms)
 
 - `unicode_input_delay`: Delay for inserting unicode codepoints with macro. (flushing)
 

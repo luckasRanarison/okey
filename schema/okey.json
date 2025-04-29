@@ -58,7 +58,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the keyboard as an input device"
+            "description": "The name of the keyboard as an input device (use `okey device list --keyboard`)"
           },
           "keys": {
             "description": "Key mappings for the main layer",

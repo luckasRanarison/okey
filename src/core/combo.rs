@@ -15,7 +15,7 @@ pub struct ComboManager {
     definitions: Vec<ComboDefinition>,
     pressed_keys: SmallVec<[ComboKey; 6]>,
     supressed_keys: SmallVec<[RawKeyCode; 6]>,
-    active_combos: Vec<ActiveCombo>,
+    active_combos: SmallVec<[ActiveCombo; 3]>,
     config: DefaultComboConfig,
 }
 
@@ -37,7 +37,7 @@ impl ComboManager {
             definitions,
             pressed_keys: SmallVec::default(),
             supressed_keys: SmallVec::default(),
-            active_combos: Vec::with_capacity(3),
+            active_combos: SmallVec::default(),
         }
     }
 
@@ -116,7 +116,7 @@ impl ComboManager {
     }
 
     fn process_active_combos(&mut self, buffer: &mut InputBuffer) {
-        for (idx, combo) in self.active_combos.iter().enumerate() {
+        for combo in &self.active_combos {
             let pressed_key = self.get_pressed_combo_key(combo);
 
             if let Some(key) = pressed_key {
@@ -134,17 +134,17 @@ impl ComboManager {
                     self.supressed_keys.retain(|code| *code == key.value());
                 }
 
-                buffer.push_key(idx as u16);
+                buffer.push_key(combo.id);
             }
         }
 
-        while let Some(idx) = buffer.pop_key() {
-            self.active_combos.remove(idx as usize);
+        while let Some(id) = buffer.pop_key() {
+            self.active_combos.retain(|combo| combo.id != id);
         }
     }
 
     fn process_combo_trigger(&mut self, buffer: &mut InputBuffer) {
-        for combo in &self.definitions {
+        for (id, combo) in self.definitions.iter().enumerate() {
             if !self.should_activate_combo(combo) || self.is_combo_supressed(combo) {
                 continue;
             }
@@ -162,7 +162,7 @@ impl ComboManager {
             }
 
             self.active_combos
-                .push(ActiveCombo::new(code, combo.keys.clone()));
+                .push(ActiveCombo::new(id as u16, code, combo.keys.clone()));
 
             buffer.push_result(result);
         }
@@ -243,12 +243,13 @@ impl ComboKey {
 
 #[derive(Debug)]
 struct ActiveCombo {
+    id: u16,
     code: Option<RawKeyCode>,
     keys: Vec<KeyCode>,
 }
 
 impl ActiveCombo {
-    fn new(code: Option<RawKeyCode>, keys: Vec<KeyCode>) -> Self {
-        Self { code, keys }
+    fn new(id: u16, code: Option<RawKeyCode>, keys: Vec<KeyCode>) -> Self {
+        Self { id, code, keys }
     }
 }

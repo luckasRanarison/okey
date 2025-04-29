@@ -1,5 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/luckasRanarison/okey/refs/heads/master/schema/okey.json
 
+# Home row mods implementation using combos
+# See https://www.youtube.com/watch?v=sLWQ4Gx88h4
+
 keyboards:
   - name: "My keyboard"
 

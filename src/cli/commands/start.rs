@@ -1,6 +1,6 @@
 use std::{fs::File, io, os::fd::AsRawFd, process, thread};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use nix::unistd::{self, ForkResult};
 
 use crate::{
@@ -24,6 +24,8 @@ pub fn start(config_path: Option<String>) -> Result<()> {
             adapter.hook(&mut device)
         })
     });
+
+    simple_logger::init()?;
 
     for handle in handles {
         handle.join().unwrap()?

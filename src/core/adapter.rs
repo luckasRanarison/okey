@@ -32,12 +32,13 @@ pub enum InputResult {
 #[derive(Debug)]
 pub struct KeyAdapter<'a, P: EventProxy> {
     proxy: &'a mut P,
+    buffer: InputBuffer,
+    config: GeneralConfig,
     mapping_manager: MappingManager,
     combo_manager: ComboManager,
     tap_dance_manager: TapDanceManager,
-    buffer: InputBuffer,
-    config: GeneralConfig,
     layer_manager: LayerManager,
+    depth: u8,
 }
 
 impl<'a, P: EventProxy> KeyAdapter<'a, P> {
@@ -52,9 +53,10 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             mapping_manager,
             tap_dance_manager,
             combo_manager,
+            layer_manager,
             config: defaults.general,
             buffer: InputBuffer::default(),
-            layer_manager,
+            depth: 0,
         }
     }
 
@@ -103,6 +105,13 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
     }
 
     fn dispatch_result(&mut self, result: &InputResult) -> Result<()> {
+        if self.depth > self.config.maximum_lookup_depth {
+            log::warn!("Maximum keycode lookup depth exceeded");
+            return Ok(());
+        }
+
+        self.depth += 1;
+
         match result {
             InputResult::Pending(code) => {
                 self.buffer.set_pending_key(*code);
@@ -138,6 +147,8 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
 
             InputResult::None => {}
         }
+
+        self.depth -= 1;
 
         Ok(())
     }
