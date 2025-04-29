@@ -905,7 +905,6 @@ dependencies = [
  "anyhow",
  "clap",
  "evdev",
- "indexmap",
  "jiff",
  "jsonschema",
  "nix",
@@ -913,6 +912,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "smallvec",
 ]
 
 [[package]]

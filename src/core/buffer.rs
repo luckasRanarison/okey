@@ -1,20 +1,16 @@
-use std::collections::HashSet;
-
-use ringbuffer::{ConstGenericRingBuffer, RingBuffer};
+use ringbuffer::{ConstGenericRingBuffer as RingBuffer, RingBuffer as _};
+use smallvec::SmallVec;
 
 use crate::config::schema::KeyCode;
 
 use super::adapter::InputResult;
 
-const BUFFER_SIZE: usize = 10;
-const DEFER_BUFFER_SIZE: usize = 3;
-
 #[derive(Debug, Default)]
 pub struct InputBuffer {
-    results: ConstGenericRingBuffer<InputResult, BUFFER_SIZE>,
-    processed: ConstGenericRingBuffer<u16, BUFFER_SIZE>,
-    deferred_keys: ConstGenericRingBuffer<KeyCode, DEFER_BUFFER_SIZE>,
-    pending_keys: HashSet<KeyCode>,
+    results: RingBuffer<InputResult, 10>,
+    processed: RingBuffer<u16, 10>,
+    deferred_keys: RingBuffer<KeyCode, 4>,
+    pending_keys: SmallVec<[KeyCode; 4]>,
 }
 
 impl InputBuffer {
@@ -43,11 +39,11 @@ impl InputBuffer {
     }
 
     pub fn set_pending_key(&mut self, code: KeyCode) {
-        self.pending_keys.insert(code);
+        self.pending_keys.push(code);
     }
 
     pub fn clear_pending_key(&mut self, code: &KeyCode) {
-        self.pending_keys.remove(code);
+        self.pending_keys.retain(|value| value != code);
     }
 
     pub fn defer_key(&mut self, code: KeyCode) {

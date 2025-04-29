@@ -1,6 +1,6 @@
 use std::{collections::HashSet, time::Instant};
 
-use indexmap::IndexMap;
+use smallvec::SmallVec;
 
 use crate::{
     config::schema::{ComboConfig, ComboDefinition, DefaultComboConfig, KeyAction, KeyCode},
@@ -13,8 +13,8 @@ use super::adapter::InputResult;
 pub struct ComboManager {
     key_set: HashSet<u16>,
     definitions: Vec<ComboDefinition>,
-    pressed_keys: IndexMap<u16, ComboKey>,
-    supressed_keys: HashSet<u16>,
+    pressed_keys: SmallVec<[ComboKey; 6]>,
+    supressed_keys: SmallVec<[u16; 6]>,
     active_combos: Vec<ActiveCombo>,
     config: DefaultComboConfig,
 }
@@ -35,15 +35,15 @@ impl ComboManager {
             config,
             key_set,
             definitions,
-            pressed_keys: IndexMap::with_capacity(8),
-            supressed_keys: HashSet::with_capacity(3),
+            pressed_keys: SmallVec::default(),
+            supressed_keys: SmallVec::default(),
             active_combos: Vec::with_capacity(3),
         }
     }
 
     pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
         if self.key_set.contains(&code) {
-            self.pressed_keys.insert(code, ComboKey::new());
+            self.pressed_keys.push(ComboKey::new(code));
             Some(InputResult::Pending(KeyCode::new(code)))
         } else {
             None
@@ -51,7 +51,9 @@ impl ComboManager {
     }
 
     pub fn handle_hold(&mut self, code: u16) -> Option<InputResult> {
-        if let Some(key) = self.pressed_keys.get_mut(&code) {
+        let key = self.pressed_keys.iter_mut().find(|key| key.code == code);
+
+        if let Some(key) = key {
             let now = Instant::now();
             let elapsed = now.duration_since(key.timestamp).as_millis();
 
@@ -65,7 +67,9 @@ impl ComboManager {
     }
 
     pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
-        if let Some(key) = self.pressed_keys.get_mut(&code) {
+        let key = self.pressed_keys.iter_mut().find(|key| key.code == code);
+
+        if let Some(key) = key {
             key.released = true;
             Some(InputResult::None)
         } else {
@@ -87,19 +91,19 @@ impl ComboManager {
         let now = Instant::now();
         let threshold = self.config.default_threshold;
 
-        for (&code, key) in &self.pressed_keys {
+        for key in &self.pressed_keys {
             if key.released {
-                buffer.push_key(code);
+                buffer.push_key(key.code);
             }
 
-            if self.supressed_keys.contains(&code) {
+            if self.supressed_keys.contains(&key.code) {
                 continue;
             }
 
-            if let Some(result) = key.get_key_result(code, now, threshold) {
+            if let Some(result) = key.get_key_result(key.code, now, threshold) {
                 // Hold event, pass control back to the main handler
                 if let InputResult::Press(_) = &result {
-                    buffer.push_key(code);
+                    buffer.push_key(key.code);
                 }
 
                 buffer.push_result(result);
@@ -107,7 +111,7 @@ impl ComboManager {
         }
 
         while let Some(code) = buffer.pop_key() {
-            self.pressed_keys.shift_remove(&code);
+            self.pressed_keys.retain(|key| key.code != code);
         }
     }
 
@@ -127,7 +131,7 @@ impl ComboManager {
                 }
 
                 for key in &combo.keys {
-                    self.supressed_keys.remove(&key.value());
+                    self.supressed_keys.retain(|code| *code == key.value());
                 }
 
                 buffer.push_key(idx as u16);
@@ -168,7 +172,7 @@ impl ComboManager {
         combo
             .keys
             .iter()
-            .find_map(|key| self.pressed_keys.get(&key.value()))
+            .find_map(|key| self.pressed_keys.iter().find(|k| k.code == key.value()))
     }
 
     fn is_combo_supressed(&self, combo: &ComboDefinition) -> bool {
@@ -181,7 +185,8 @@ impl ComboManager {
     fn should_activate_combo(&self, combo: &ComboDefinition) -> bool {
         combo.keys.iter().all(|key| {
             self.pressed_keys
-                .get(&key.value())
+                .iter()
+                .find(|k| k.code == key.value())
                 .is_some_and(|value| !value.hold)
         })
     }
@@ -189,14 +194,16 @@ impl ComboManager {
 
 #[derive(Debug)]
 struct ComboKey {
+    code: u16,
     timestamp: Instant,
     released: bool,
     hold: bool,
 }
 
 impl ComboKey {
-    fn new() -> Self {
+    fn new(code: u16) -> Self {
         ComboKey {
+            code,
             timestamp: Instant::now(),
             released: false,
             hold: false,

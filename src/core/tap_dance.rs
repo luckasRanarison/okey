@@ -1,7 +1,6 @@
-use std::{
-    collections::{HashMap, HashSet},
-    time::Instant,
-};
+use std::{collections::HashMap, time::Instant};
+
+use smallvec::SmallVec;
 
 use crate::{
     config::schema::{DefaultTapDanceConfig, KeyAction, KeyCode, TapDanceConfig},
@@ -13,8 +12,8 @@ use super::adapter::InputResult;
 #[derive(Debug)]
 pub struct TapDanceManager {
     tap_dances: HashMap<u16, TapDanceConfig>,
-    pressed_keys: Vec<PressedKey>,
-    supressed_keys: HashSet<u16>,
+    pressed_keys: SmallVec<[PressedKey; 4]>,
+    supressed_keys: SmallVec<[u16; 2]>,
     config: DefaultTapDanceConfig,
 }
 
@@ -31,8 +30,8 @@ impl TapDanceManager {
         Self {
             config,
             tap_dances,
-            pressed_keys: Vec::with_capacity(5),
-            supressed_keys: HashSet::with_capacity(3),
+            pressed_keys: SmallVec::default(),
+            supressed_keys: SmallVec::default(),
         }
     }
 
@@ -56,7 +55,7 @@ impl TapDanceManager {
     pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|s| s.code == code);
 
-        self.supressed_keys.remove(&code);
+        self.supressed_keys.retain(|key| *key != code);
 
         if let Some(key) = key {
             key.released = true;
@@ -84,7 +83,7 @@ impl TapDanceManager {
 
             match &result {
                 InputResult::Macro(_) => {
-                    self.supressed_keys.insert(state.code);
+                    self.supressed_keys.push(state.code);
                 }
                 InputResult::DoubleSequence(inner) if !timeout => {
                     if let [InputResult::Press(out_code), _] = inner.as_ref() {
