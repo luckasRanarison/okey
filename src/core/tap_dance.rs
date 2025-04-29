@@ -55,7 +55,9 @@ impl TapDanceManager {
     pub fn handle_release(&mut self, code: RawKeyCode) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|s| s.code == code);
 
-        self.supressed_keys.retain(|key| *key != code);
+        if !self.supressed_keys.is_empty() {
+            self.supressed_keys.retain(|key| *key != code);
+        }
 
         if let Some(key) = key {
             key.released = true;

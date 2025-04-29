@@ -85,7 +85,7 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             PRESS_EVENT => self.handle_press(action),
             HOLD_EVENT => self.handle_hold(action),
             RELEASE_EVENT => self.handle_release(action),
-            _ => unreachable!(),
+            value => unreachable!("Unknown event value: {value}"),
         };
 
         self.dispatch_result(&result)
@@ -109,12 +109,7 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             }
 
             InputResult::Release(code) if self.buffer.is_pending_key(code) => {
-                self.buffer.clear_pending_key(code);
-                self.dispatch_event_result(result, *code)?;
-
-                if !self.buffer.has_pending_keys() {
-                    self.dispatch_deferred_events()?;
-                }
+                self.dispatch_pending_key(code, result)?;
             }
 
             InputResult::Press(code)
@@ -152,7 +147,7 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             InputResult::Press(_) => (PRESS_EVENT, Self::handle_press),
             InputResult::Hold(_) => (HOLD_EVENT, Self::handle_hold),
             InputResult::Release(_) => (RELEASE_EVENT, Self::handle_release),
-            _ => unreachable!(),
+            value => unreachable!("Unexpected input result: {value:?}"),
         };
 
         let action = self.mapping_manager.map(&code.value());
@@ -169,16 +164,21 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
         }
     }
 
-    fn dispatch_deferred_events(&mut self) -> Result<()> {
-        while let Some(key) = self.buffer.pop_deferred_key() {
-            self.proxy.wait(self.config.deferred_key_delay)?; // add a small delay to make input smoother
+    fn dispatch_pending_key(&mut self, code: &KeyCode, result: &InputResult) -> Result<()> {
+        self.buffer.clear_pending_key(code);
+        self.dispatch_event_result(result, *code)?;
 
-            let result = InputResult::DoubleSequence(Box::new([
-                InputResult::Press(key),
-                InputResult::Release(key),
-            ]));
+        if !self.buffer.has_pending_keys() {
+            while let Some(key) = self.buffer.pop_deferred_key() {
+                self.proxy.wait(self.config.deferred_key_delay)?; // add a small delay to make input smoother
 
-            self.dispatch_result(&result)?;
+                let result = InputResult::DoubleSequence(Box::new([
+                    InputResult::Press(key),
+                    InputResult::Release(key),
+                ]));
+
+                self.dispatch_result(&result)?;
+            }
         }
 
         Ok(())
