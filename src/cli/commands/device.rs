@@ -6,7 +6,7 @@ pub fn list(keyboard: bool) -> Result<()> {
     let devices = fs::find_input_devices()?;
 
     for device in devices {
-        if keyboard && is_keyboard(&device) {
+        if keyboard && !is_keyboard(&device) {
             continue;
         }
 

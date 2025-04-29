@@ -10,7 +10,7 @@ use crate::config::schema::{
 use super::{
     buffer::InputBuffer,
     combo::ComboManager,
-    event::{HOLD_EVENT, IntoInputEvent, PRESS_EVENT, RELEASE_EVENT, ToInputResult},
+    event::{IntoInputEvent, ToInputResult, HOLD_EVENT, PRESS_EVENT, RELEASE_EVENT},
     layer::LayerManager,
     mapping::MappingManager,
     proxy::EventProxy,
@@ -210,10 +210,10 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                self.layer_manager
+                self.tap_dance_manager
                     .handle_press(value)
-                    .or_else(|| self.tap_dance_manager.handle_press(value))
                     .or_else(|| self.combo_manager.handle_press(value))
+                    .or_else(|| self.layer_manager.handle_press(value))
                     .unwrap_or(InputResult::Press(code))
             }
             KeyAction::Macro(codes) => InputResult::Macro(codes),
@@ -225,10 +225,10 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                self.layer_manager
+                self.tap_dance_manager
                     .handle_hold(value)
-                    .or_else(|| self.tap_dance_manager.handle_hold(value))
                     .or_else(|| self.combo_manager.handle_hold(value))
+                    .or_else(|| self.layer_manager.handle_hold(value))
                     .unwrap_or(InputResult::Hold(code))
             }
             KeyAction::Macro(_) => InputResult::None,
@@ -240,10 +240,10 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             KeyAction::KeyCode(code) => {
                 let value = code.value();
 
-                self.layer_manager
+                self.tap_dance_manager
                     .handle_release(value)
-                    .or_else(|| self.tap_dance_manager.handle_release(value))
                     .or_else(|| self.combo_manager.handle_release(value))
+                    .or_else(|| self.layer_manager.handle_release(value))
                     .unwrap_or(InputResult::Release(code))
             }
             _ => InputResult::None,

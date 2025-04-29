@@ -161,30 +161,30 @@ fn test_tap_dance_oneshoot_layer() -> Result<()> {
     Ok(())
 }
 
-// #[test]
-// fn test_combo_oneshoot_layer() -> Result<()> {
-//     let mut proxy = EventProxyMock::default();
-//     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
-//
-//     adapter.process(InputBuffer::combo_press(KeyCode::KEY_D, KeyCode::KEY_F))?;
-//     adapter.process(InputBuffer::combo_release(KeyCode::KEY_D, KeyCode::KEY_F))?;
-//
-//     adapter.process(InputBuffer::tap(KeyCode::KEY_P))?;
-//     adapter.process(InputBuffer::tap(KeyCode::KEY_P))?;
-//     adapter.process(InputBuffer::tap(KeyCode::KEY_E))?;
-//
-//     adapter.process(InputBuffer::combo_press(KeyCode::KEY_D, KeyCode::KEY_F))?;
-//     adapter.process(InputBuffer::combo_release(KeyCode::KEY_D, KeyCode::KEY_F))?;
-//
-//     adapter.process(InputBuffer::tap(KeyCode::KEY_P))?;
-//
-//     let expected = InputBuffer::new(KeyCode::KEY_X)
-//         .tap_then(KeyCode::KEY_P)
-//         .tap_then(KeyCode::KEY_E)
-//         .tap_then(KeyCode::KEY_X)
-//         .tap();
-//
-//     assert_eq!(proxy.queue(), expected.value());
-//
-//     Ok(())
-// }
+#[test]
+fn test_combo_oneshoot_layer() -> Result<()> {
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
+
+    adapter.process(InputBuffer::combo_press(KeyCode::KEY_D, KeyCode::KEY_F))?;
+    adapter.process(InputBuffer::combo_release(KeyCode::KEY_D, KeyCode::KEY_F))?;
+
+    adapter.process(InputBuffer::tap(KeyCode::KEY_P))?;
+    adapter.process(InputBuffer::tap(KeyCode::KEY_P))?;
+    adapter.process(InputBuffer::tap(KeyCode::KEY_E))?;
+
+    adapter.process(InputBuffer::combo_press(KeyCode::KEY_D, KeyCode::KEY_F))?;
+    adapter.process(InputBuffer::combo_release(KeyCode::KEY_D, KeyCode::KEY_F))?;
+
+    adapter.process(InputBuffer::tap(KeyCode::KEY_P))?;
+
+    let expected = InputBuffer::new(KeyCode::KEY_X)
+        .tap_then(KeyCode::KEY_P)
+        .tap_then(KeyCode::KEY_E)
+        .tap_then(KeyCode::KEY_X)
+        .tap();
+
+    assert_eq!(proxy.queue(), expected.value());
+
+    Ok(())
+}
