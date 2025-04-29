@@ -42,7 +42,13 @@ An advanced, easy-to-use key remapper for Linux written in Rust, inspired by [QM
 > [!IMPORTANT]
 > The [Rust toolchain](https://rustup.rs/) is required to build the project.
 
-There are currently no released binaries, but you can build the project from source using the following commands:
+There are currently no released binaries, but you can install `okey` with [cargo](https://doc.rust-lang.org/cargo/):
+
+```bash
+cargo install okey-cli
+```
+
+You can also build the project from source using the following commands:
 
 ```bash
 git clone --depth 1 https://github.com/luckasRanarison/okey/
