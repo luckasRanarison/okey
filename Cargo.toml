@@ -1,5 +1,5 @@
 [package]
-name = "okey"
+name = "okey-cli"
 version = "0.1.0"
 edition = "2021"
 authors = ["LIOKA Ranarison Fiderana <luckasranarison@gmail.com>"]
@@ -9,6 +9,13 @@ repository = "https://github.com/luckasRanarison/okey"
 readme = "README.md"
 keywords = ["keyboard", "cli"]
 categories = ["command-line-interface", "hardware-support"]
+
+[lib]
+name = "okey"
+
+[[bin]]
+name = "okey"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.98"

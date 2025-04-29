@@ -2,6 +2,7 @@
 
 <img src="./assets/logo.svg" alt="okey" width=150><br>
 
+[![crates.io](https://img.shields.io/crates/v/okey-cli?style=for-the-badge)](https://crates.io/crates/okey-cli)
 ![Build](https://img.shields.io/github/actions/workflow/status/luckasranarison/okey/ci.yml?style=for-the-badge&label=Build&labelColor=3b434b&color=30c352)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&labelColor=3b434b&color=blue)](https://github.com/luckasRanarison/luckasranarison.github.io/blob/master/LICENSE)
 ![Stars](https://img.shields.io/github/stars/luckasranarison/okey?style=for-the-badge&label=Stars&labelColor=3b434b&color=yellow)
