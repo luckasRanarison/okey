@@ -4,12 +4,12 @@ use smallvec::SmallVec;
 
 use crate::config::schema::{KeyAction, LayerDefinition, LayerModifierKind};
 
-use super::adapter::InputResult;
+use super::{adapter::InputResult, shared::RawKeyCode};
 
 #[derive(Debug)]
 pub struct LayerManager {
-    layer_map: HashMap<u16, LayerDefinition>,
-    layer_stack: SmallVec<[u16; 5]>,
+    layer_map: HashMap<RawKeyCode, LayerDefinition>,
+    layer_stack: SmallVec<[RawKeyCode; 5]>,
 }
 
 impl LayerManager {
@@ -42,7 +42,7 @@ impl LayerManager {
         action
     }
 
-    pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_press(&mut self, code: RawKeyCode) -> Option<InputResult> {
         if let Some(config) = self.layer_map.get(&code) {
             match config.modifier.get_modifer_kind() {
                 LayerModifierKind::Toggle if self.layer_stack.contains(&code) => {
@@ -58,7 +58,7 @@ impl LayerManager {
         }
     }
 
-    pub fn handle_hold(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_hold(&mut self, code: RawKeyCode) -> Option<InputResult> {
         if self.layer_stack.contains(&code) {
             Some(InputResult::None)
         } else {
@@ -66,7 +66,7 @@ impl LayerManager {
         }
     }
 
-    pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_release(&mut self, code: RawKeyCode) -> Option<InputResult> {
         if let Some(definition) = self.layer_map.get(&code) {
             if let LayerModifierKind::Momentary = definition.modifier.get_modifer_kind() {
                 self.layer_stack.retain(|layer_code| *layer_code != code)

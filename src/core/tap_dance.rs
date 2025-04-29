@@ -7,13 +7,13 @@ use crate::{
     core::buffer::InputBuffer,
 };
 
-use super::adapter::InputResult;
+use super::{adapter::InputResult, shared::RawKeyCode};
 
 #[derive(Debug)]
 pub struct TapDanceManager {
-    tap_dances: HashMap<u16, TapDanceConfig>,
+    tap_dances: HashMap<RawKeyCode, TapDanceConfig>,
     pressed_keys: SmallVec<[PressedKey; 4]>,
-    supressed_keys: SmallVec<[u16; 2]>,
+    supressed_keys: SmallVec<[RawKeyCode; 2]>,
     config: DefaultTapDanceConfig,
 }
 
@@ -35,7 +35,7 @@ impl TapDanceManager {
         }
     }
 
-    pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_press(&mut self, code: RawKeyCode) -> Option<InputResult> {
         if let Some(config) = self.tap_dances.get(&code) {
             self.pressed_keys
                 .push(PressedKey::new(code, config, self.config.default_timeout));
@@ -46,13 +46,13 @@ impl TapDanceManager {
         }
     }
 
-    pub fn handle_hold(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_hold(&mut self, code: RawKeyCode) -> Option<InputResult> {
         self.tap_dances
             .contains_key(&code)
             .then_some(InputResult::None)
     }
 
-    pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_release(&mut self, code: RawKeyCode) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|s| s.code == code);
 
         self.supressed_keys.retain(|key| *key != code);
@@ -114,7 +114,7 @@ impl TapDanceManager {
 
 #[derive(Debug)]
 struct PressedKey {
-    code: u16,
+    code: RawKeyCode,
     timeout: u16,
     timestamp: Instant,
     released: bool,
@@ -123,7 +123,7 @@ struct PressedKey {
 }
 
 impl PressedKey {
-    fn new(code: u16, config: &TapDanceConfig, default_timeout: u16) -> Self {
+    fn new(code: RawKeyCode, config: &TapDanceConfig, default_timeout: u16) -> Self {
         PressedKey {
             code,
             timeout: config.timeout.unwrap_or(default_timeout),

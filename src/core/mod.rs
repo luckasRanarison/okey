@@ -6,6 +6,7 @@ mod input;
 mod layer;
 mod mapping;
 mod proxy;
+mod shared;
 mod tap_dance;
 
 pub use adapter::KeyAdapter;

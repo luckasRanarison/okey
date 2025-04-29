@@ -3,12 +3,12 @@ use smallvec::SmallVec;
 
 use crate::config::schema::KeyCode;
 
-use super::adapter::InputResult;
+use super::{adapter::InputResult, shared::RawKeyCode};
 
 #[derive(Debug, Default)]
 pub struct InputBuffer {
     results: RingBuffer<InputResult, 10>,
-    processed: RingBuffer<u16, 10>,
+    processed: RingBuffer<RawKeyCode, 10>,
     deferred_keys: RingBuffer<KeyCode, 4>,
     pending_keys: SmallVec<[KeyCode; 4]>,
 }
@@ -22,11 +22,11 @@ impl InputBuffer {
         self.results.dequeue()
     }
 
-    pub fn push_key(&mut self, idx: u16) {
-        self.processed.enqueue(idx);
+    pub fn push_key(&mut self, key: RawKeyCode) {
+        self.processed.enqueue(key);
     }
 
-    pub fn pop_key(&mut self) -> Option<u16> {
+    pub fn pop_key(&mut self) -> Option<RawKeyCode> {
         self.processed.dequeue()
     }
 

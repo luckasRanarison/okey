@@ -7,14 +7,14 @@ use crate::{
     core::buffer::InputBuffer,
 };
 
-use super::adapter::InputResult;
+use super::{adapter::InputResult, shared::RawKeyCode};
 
 #[derive(Debug)]
 pub struct ComboManager {
-    key_set: HashSet<u16>,
+    key_set: HashSet<RawKeyCode>,
     definitions: Vec<ComboDefinition>,
     pressed_keys: SmallVec<[ComboKey; 6]>,
-    supressed_keys: SmallVec<[u16; 6]>,
+    supressed_keys: SmallVec<[RawKeyCode; 6]>,
     active_combos: Vec<ActiveCombo>,
     config: DefaultComboConfig,
 }
@@ -41,7 +41,7 @@ impl ComboManager {
         }
     }
 
-    pub fn handle_press(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_press(&mut self, code: RawKeyCode) -> Option<InputResult> {
         if self.key_set.contains(&code) {
             self.pressed_keys.push(ComboKey::new(code));
             Some(InputResult::Pending(KeyCode::new(code)))
@@ -50,7 +50,7 @@ impl ComboManager {
         }
     }
 
-    pub fn handle_hold(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_hold(&mut self, code: RawKeyCode) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|key| key.code == code);
 
         if let Some(key) = key {
@@ -66,7 +66,7 @@ impl ComboManager {
         None
     }
 
-    pub fn handle_release(&mut self, code: u16) -> Option<InputResult> {
+    pub fn handle_release(&mut self, code: RawKeyCode) -> Option<InputResult> {
         let key = self.pressed_keys.iter_mut().find(|key| key.code == code);
 
         if let Some(key) = key {
@@ -194,14 +194,14 @@ impl ComboManager {
 
 #[derive(Debug)]
 struct ComboKey {
-    code: u16,
+    code: RawKeyCode,
     timestamp: Instant,
     released: bool,
     hold: bool,
 }
 
 impl ComboKey {
-    fn new(code: u16) -> Self {
+    fn new(code: RawKeyCode) -> Self {
         ComboKey {
             code,
             timestamp: Instant::now(),
@@ -210,7 +210,12 @@ impl ComboKey {
         }
     }
 
-    fn get_key_result(&self, code: u16, now: Instant, threshold: u16) -> Option<InputResult> {
+    fn get_key_result(
+        &self,
+        code: RawKeyCode,
+        now: Instant,
+        threshold: u16,
+    ) -> Option<InputResult> {
         let elapsed = now.duration_since(self.timestamp).as_millis();
 
         if elapsed < threshold as u128 {
@@ -238,12 +243,12 @@ impl ComboKey {
 
 #[derive(Debug)]
 struct ActiveCombo {
-    code: Option<u16>,
+    code: Option<RawKeyCode>,
     keys: Vec<KeyCode>,
 }
 
 impl ActiveCombo {
-    fn new(code: Option<u16>, keys: Vec<KeyCode>) -> Self {
+    fn new(code: Option<RawKeyCode>, keys: Vec<KeyCode>) -> Self {
         Self { code, keys }
     }
 }
