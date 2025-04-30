@@ -1,6 +1,6 @@
 [package]
 name = "okey-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["LIOKA Ranarison Fiderana <luckasranarison@gmail.com>"]
 description = "An advanced, easy-to-use key remapper for Linux"
