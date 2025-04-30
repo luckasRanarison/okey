@@ -187,7 +187,7 @@ keyboards:
 > [!IMPORTANT]
 > The [Rust toolchain](https://rustup.rs/) is required to build the project.
 
-There are currently no released binaries, but you can install `okey` with [cargo](https://doc.rust-lang.org/cargo/):
+There are currently no packaged binaries for specific distros, but you can download `okey` from the [releases](https://github.com/luckasRanarison/okey/releases) for install it with [cargo](https://doc.rust-lang.org/cargo/):
 
 ```bash
 cargo install okey-cli
