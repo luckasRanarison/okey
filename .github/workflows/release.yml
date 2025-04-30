@@ -37,6 +37,7 @@ jobs:
         uses: houseabsolute/actions-rust-release@v0
         with:
           executable-name: okey
+          changes-file: "CHANGELOG.md"
           target: ${{ matrix.platform.target }}
 
   publish:
