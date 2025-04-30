@@ -7,6 +7,7 @@ const COMBO_TEST: &str = include_str!("./config/combos.yaml");
 const LAYER_TEST: &str = include_str!("./config/layers.yaml");
 const MACRO_TEST: &str = include_str!("./config/macros.yaml");
 const MAPPING_TEST: &str = include_str!("./config/mappings.yaml");
+const SHIFT_TEST: &str = include_str!("./config/shift.yaml");
 
 const TD_EX: &str = include_str!("../../examples/tap_dance_hrm.yaml");
 const COMBO_EX: &str = include_str!("../../examples/combo_hrm.yaml");
@@ -27,6 +28,7 @@ fn test_config_validation() {
     assert!(jsonschema::is_valid(&schema, &yaml_to_json(LAYER_TEST)));
     assert!(jsonschema::is_valid(&schema, &yaml_to_json(MACRO_TEST)));
     assert!(jsonschema::is_valid(&schema, &yaml_to_json(MAPPING_TEST)));
+    assert!(jsonschema::is_valid(&schema, &yaml_to_json(SHIFT_TEST)));
 
     assert!(jsonschema::is_valid(&schema, &yaml_to_json(TD_EX)));
     assert!(jsonschema::is_valid(&schema, &yaml_to_json(COMBO_EX)));

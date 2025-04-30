@@ -1,6 +1,9 @@
 use std::{cell::RefCell, collections::HashMap, hash::Hash, str::FromStr};
 
-use serde::{Deserialize, Deserializer};
+use serde::{
+    de::{value::StringDeserializer, IntoDeserializer},
+    Deserialize, Deserializer,
+};
 
 use super::defaults;
 
@@ -171,6 +174,9 @@ pub enum EventMacro {
     Shell { shell: String, trim: Option<bool> },
 }
 
+const SAFE_KEYCODE_START: u16 = 999;
+const SHIFTED_KEYCODE_START: u16 = 800;
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct KeyCode(evdev::KeyCode);
 
@@ -178,6 +184,36 @@ impl From<evdev::KeyCode> for KeyCode {
     fn from(value: evdev::KeyCode) -> Self {
         Self(value)
     }
+}
+
+const fn to_shifted_code(code: evdev::KeyCode) -> isize {
+    (SHIFTED_KEYCODE_START + code.code()) as isize
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[allow(clippy::enum_variant_names)]
+pub enum ShiftedKeycodes {
+    KeyExclamation = to_shifted_code(evdev::KeyCode::KEY_1),
+    KeyAt = to_shifted_code(evdev::KeyCode::KEY_2),
+    KeyHash = to_shifted_code(evdev::KeyCode::KEY_3),
+    KeyDollarsign = to_shifted_code(evdev::KeyCode::KEY_4),
+    KeyPercent = to_shifted_code(evdev::KeyCode::KEY_5),
+    KeyCaret = to_shifted_code(evdev::KeyCode::KEY_6),
+    KeyAmpersand = to_shifted_code(evdev::KeyCode::KEY_7),
+    KeyStar = to_shifted_code(evdev::KeyCode::KEY_8),
+    KeyLeftparen = to_shifted_code(evdev::KeyCode::KEY_9),
+    KeyRightparen = to_shifted_code(evdev::KeyCode::KEY_0),
+    KeyUnderscore = to_shifted_code(evdev::KeyCode::KEY_MINUS),
+    KeyPlus = to_shifted_code(evdev::KeyCode::KEY_EQUAL),
+    KeyLeftcurly = to_shifted_code(evdev::KeyCode::KEY_LEFTBRACE),
+    KeyRightcurly = to_shifted_code(evdev::KeyCode::KEY_RIGHTBRACE),
+    KeyColon = to_shifted_code(evdev::KeyCode::KEY_SEMICOLON),
+    KeyDoublequote = to_shifted_code(evdev::KeyCode::KEY_APOSTROPHE),
+    KeyLess = to_shifted_code(evdev::KeyCode::KEY_COMMA),
+    KeyGreater = to_shifted_code(evdev::KeyCode::KEY_DOT),
+    KeyQuestion = to_shifted_code(evdev::KeyCode::KEY_SLASH),
+    KeyTidle = to_shifted_code(evdev::KeyCode::KEY_GRAVE),
 }
 
 impl KeyCode {
@@ -192,9 +228,19 @@ impl KeyCode {
     pub fn is_custom(self) -> bool {
         self.0.code() >= SAFE_KEYCODE_START
     }
-}
 
-pub const SAFE_KEYCODE_START: u16 = 999;
+    pub fn is_shifted(self) -> bool {
+        self.0.code() > SHIFTED_KEYCODE_START && self.0.code() < SAFE_KEYCODE_START
+    }
+
+    pub fn shift() -> Self {
+        KeyCode::new(evdev::KeyCode::KEY_LEFTSHIFT.code())
+    }
+
+    pub fn unshift(self) -> Self {
+        KeyCode::new(self.0.code() - SHIFTED_KEYCODE_START)
+    }
+}
 
 thread_local! {
     static CUSTOM_KEYCODES: RefCell<HashMap<String, u16>> = HashMap::default().into();
@@ -206,14 +252,20 @@ impl<'de> Deserialize<'de> for KeyCode {
         D: Deserializer<'de>,
     {
         let key = String::deserialize(deserializer)?;
+        let key_deserializer: StringDeserializer<D::Error> = key.clone().into_deserializer();
 
-        match evdev::KeyCode::from_str(&key) {
-            Ok(value) => Ok(KeyCode(value)),
-            _ => CUSTOM_KEYCODES.with_borrow_mut(|keycodes| {
-                let count = keycodes.len() as u16;
-                let entry = keycodes.entry(key).or_insert(count + SAFE_KEYCODE_START);
-                Ok(KeyCode(evdev::KeyCode::new(*entry)))
-            }),
+        if let Ok(shifted) = ShiftedKeycodes::deserialize(key_deserializer) {
+            return Ok(KeyCode(evdev::KeyCode(shifted as u16)));
         }
+
+        if let Ok(value) = evdev::KeyCode::from_str(&key) {
+            return Ok(KeyCode(value));
+        }
+
+        CUSTOM_KEYCODES.with_borrow_mut(|keycodes| {
+            let count = keycodes.len() as u16;
+            let entry = keycodes.entry(key).or_insert(count + SAFE_KEYCODE_START);
+            Ok(KeyCode(evdev::KeyCode::new(*entry)))
+        })
     }
 }

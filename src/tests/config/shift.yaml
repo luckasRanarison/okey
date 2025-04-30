@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/luckasRanarison/okey/refs/heads/master/schema/okey.json
+
+keyboards:
+  - name: "Shift test keyboard"
+
+    keys:
+      KEY_Q: KEY_EXCLAMATION
+      KEY_W: KEY_AT
+      KEY_E: KEY_HASH
+      KEY_R: KEY_DOLLARSIGN
+      KEY_T: KEY_PERCENT
+      KEY_Y: KEY_CARET
+      KEY_U: KEY_AMPERSAND
+      KEY_I: KEY_STAR
+      KEY_O: KEY_LEFTPAREN
+      KEY_P: KEY_RIGHTPAREN
+      KEY_A: KEY_UNDERSCORE
+      KEY_S: KEY_PLUS
+      KEY_D: KEY_LEFTCURLY
+      KEY_F: KEY_RIGHTCURLY
+      KEY_G: KEY_COLON
+      KEY_H: KEY_DOUBLEQUOTE
+      KEY_J: KEY_LESS
+      KEY_K: KEY_GREATER
+      KEY_L: KEY_QUESTION
+      KEY_Z: KEY_TIDLE

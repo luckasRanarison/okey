@@ -343,6 +343,33 @@ Type aliases:
 
 #### `KeyCode`
 
+<details>
+
+<summary>Shifted keycodes (expand)</summary>
+
+- `KEY_EXCLAMATION`
+- `KEY_AT`
+- `KEY_HASH`
+- `KEY_DOLLARSIGN`
+- `KEY_PERCENT`
+- `KEY_CARET`
+- `KEY_AMPERSAND`
+- `KEY_STAR`
+- `KEY_LEFTPAREN`
+- `KEY_RIGHTPAREN`
+- `KEY_UNDERSCORE`
+- `KEY_PLUS`
+- `KEY_LEFTCURLY`
+- `KEY_RIGHTCURLY`
+- `KEY_COLON`
+- `KEY_DOUBLEQUOTE`
+- `KEY_LESS`
+- `KEY_GREATER`
+- `KEY_QUESTION`
+- `KEY_TIDLE`
+
+</details>
+
 A custom string or one of:
 
 - `KEY_RESERVED`

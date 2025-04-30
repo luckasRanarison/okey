@@ -165,6 +165,9 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
         let action = self.layer_manager.map(action);
 
         match action {
+            KeyAction::KeyCode(code) if code.is_shifted() => {
+                self.dispatch_shifted_key(code, event_kind)
+            }
             KeyAction::KeyCode(code) if !code.is_custom() => {
                 self.proxy.emit(&[code.to_event(event_kind)])
             }
@@ -172,6 +175,22 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
                 let result = handler(self, action);
                 self.dispatch_result(&result)
             }
+        }
+    }
+
+    fn dispatch_shifted_key(&mut self, code: KeyCode, event_kind: i32) -> Result<()> {
+        match event_kind {
+            PRESS_EVENT => self.proxy.emit(&[
+                KeyCode::shift().to_event(PRESS_EVENT),
+                KeyCode::shift().to_event(HOLD_EVENT),
+                code.unshift().to_event(PRESS_EVENT),
+            ]),
+            HOLD_EVENT => self.proxy.emit(&[code.unshift().to_event(HOLD_EVENT)]),
+            RELEASE_EVENT => self.proxy.emit(&[
+                KeyCode::shift().to_event(RELEASE_EVENT),
+                code.unshift().to_event(RELEASE_EVENT),
+            ]),
+            value => unreachable!("Unknown event kind: {value}"),
         }
     }
 
