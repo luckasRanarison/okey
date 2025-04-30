@@ -213,7 +213,8 @@ pub enum ShiftedKeycodes {
     KeyLess = to_shifted_code(evdev::KeyCode::KEY_COMMA),
     KeyGreater = to_shifted_code(evdev::KeyCode::KEY_DOT),
     KeyQuestion = to_shifted_code(evdev::KeyCode::KEY_SLASH),
-    KeyTidle = to_shifted_code(evdev::KeyCode::KEY_GRAVE),
+    KeyTilde = to_shifted_code(evdev::KeyCode::KEY_GRAVE),
+    KeyPipe = to_shifted_code(evdev::KeyCode::KEY_BACKSLASH),
 }
 
 impl KeyCode {

@@ -366,7 +366,8 @@ Type aliases:
 - `KEY_LESS`
 - `KEY_GREATER`
 - `KEY_QUESTION`
-- `KEY_TIDLE`
+- `KEY_TILDE`
+- `KEY_PIPE`
 
 </details>
 

@@ -23,4 +23,5 @@ keyboards:
       KEY_J: KEY_LESS
       KEY_K: KEY_GREATER
       KEY_L: KEY_QUESTION
-      KEY_Z: KEY_TIDLE
+      KEY_Z: KEY_TILDE
+      KEY_X: KEY_PIPE
