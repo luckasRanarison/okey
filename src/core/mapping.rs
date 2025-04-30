@@ -2,9 +2,11 @@ use std::collections::HashMap;
 
 use crate::config::schema::{KeyAction, KeyCode};
 
+use super::shared::RawKeyCode;
+
 #[derive(Debug)]
 pub struct MappingManager {
-    mappings: HashMap<u16, KeyAction>,
+    mappings: HashMap<RawKeyCode, KeyAction>,
 }
 
 impl MappingManager {
@@ -17,7 +19,7 @@ impl MappingManager {
         }
     }
 
-    pub fn map(&self, code: &u16) -> KeyAction {
+    pub fn map(&self, code: &RawKeyCode) -> KeyAction {
         self.mappings
             .get(code)
             .cloned()
