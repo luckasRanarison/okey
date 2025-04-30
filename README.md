@@ -28,13 +28,158 @@ An advanced, easy-to-use key remapper for Linux written in Rust, inspired by [QM
 
 ## Features
 
-- Key remapping
-- Macros
-- Combos
-- Tap dance (multi-function keys on tap/hold)
-- Virtual layers
-
 > [!TIP]
+> Click on the feature to expand the example configuration.
+
+<details>
+
+<summary><b>Easy-to-use</b>: designed to be used as a <a href="https://github.com/systemd/systemd">systemd</a> service, configured using simple <a href="https://yaml.org/">YAML</a> with IDE support (see <a href="#configuration-schema">schema</a>).</summary><br>
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/luckasRanarison/okey/refs/heads/master/schema/okey.json
+
+keyboards:
+  - name: "My keyboard"
+
+    keys:
+      KEY_X: KEY_Y
+
+    combos:
+      - keys: [KEY_D, KEY_F]
+        action: KEY_LEFTCTRL
+
+    tap_dances:
+      KEY_CAPSLOCK:
+        tap: KEY_TAB
+        hold: KEY_MOMLAYER
+
+    layers:
+      momentary:
+        modifier: KEY_MOMLAYER
+
+        keys:
+          KEY_O: KEY_K
+```
+
+</details>
+
+<details>
+
+<summary><b>Key remapping</b>: change the default global key actions.</summary><br>
+
+```yaml
+keyboards:
+  - name: My keyboard
+
+    keys:
+      KEY_CAPSLOCK: KEY_TAB
+      KEY_TAB: CUSTOM_KEYCODE # can be used to activate a layer or to trigger other actions
+```
+
+</details>
+
+<details>
+
+<summary><b>Macros</b>: execute arbitrary key sequences with a single key stroke.</summary><br>
+
+```yaml
+keyboards:
+  - name: My keyboard
+
+    keys:
+      KEY_F1: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O] # executes simple key sequences (press + release)
+      KEY_F2: { string: "Hi, you!" } # inserts an ASCII string
+      KEY_F3: { env: FOO } # inserts the value of the environment variable
+      KEY_F4: { unicode: 🙂👍 } # inserts unicode characters using CTRL + SHIFT + U + <code> + ENTER
+      KEY_F5: { shell: "echo 'foo'", trim: true } # inserts shell script output
+
+      KEY_F6: [
+          { press: KEY_O },
+          { hold: KEY_O },
+          { delay: 1000 },
+          { release: KEY_O },
+          KEY_K, # press + release
+        ] # executes detailed key sequences
+
+      KEY_F7: [{ env: USERNAME }, { string: "@gmail.com" }] # all types of macro are composable
+```
+
+</details>
+
+<details>
+
+<summary><b>Combos</b>: trigger an action when two or more keys are pressed simultaneously.</summary><br>
+
+```yaml
+keyboards:
+  - name: My keyboard
+
+    combos:
+      - keys: [KEY_D, KEY_F]
+        action: LEFT_CTRL
+```
+
+</details>
+
+<details>
+
+<summary><b>Tap dance</b>: overload keys by binding different actions when a key is pressed or held down.</summary><br>
+
+```yaml
+keyboards:
+  - name: My keyboard
+
+    tap_dances:
+      tap: KEY_S
+      hold: KEY_LEFTSHIFT
+      timeout: 250 # (default: 200ms)
+```
+
+</details>
+
+<details>
+
+<summary><b>Virtual layers</b>: create custom layers, similar to holding <code>Shift</code>. It supports momentary, toggle and oneshoot layers.</summary><br>
+
+```yaml
+keyboards:
+  - name: "My keyboard"
+
+    keys:
+      KEY_TAB: KEY_ONELAYER # a custom keycode to activate the layer below
+
+    tap_dances:
+      KEY_CAPSLOCK:
+        tap: KEY_TAB
+        hold: KEY_MOMLAYER
+
+    layers:
+      momentary:
+        modifier: KEY_MOMLAYER # type is momentary by default, active on hold
+
+        keys:
+          KEY_X: KEY_Y
+
+      one:
+        modifier:
+          key: KEY_ONELAYER
+          type: oneshoot # active for one keypress
+
+        keys:
+          KEY_O: KEY_K
+
+      toggle:
+        modifier:
+          key: KEY_F12
+          type: toggle # active until switched off
+
+        keys:
+          KEY_K: KEY_O
+```
+
+</details>
+
+> [!NOTE]
 > The features are composable. For example, you can use a combo to trigger a tap dance.
 
 ## Installation
@@ -140,7 +285,7 @@ The configuration for okey is written in [YAML](https://yaml.org/), it defines h
 
 > [!TIP]
 >  If you are using [yaml-language-server](https://github.com/redhat-developer/yaml-language-server), you can get autocompletion and IDE support by adding the following at the top of your file:
-> ```yaml 
+> ```yaml
 > # yaml-language-server: $schema=https://raw.githubusercontent.com/luckasRanarison/okey/refs/heads/master/schema/okey.json
 > ```
 
