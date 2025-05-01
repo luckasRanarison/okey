@@ -1,3 +1,9 @@
+## v0.1.2 - 01-05-2025
+
+- Added special keycodes for shifted characters.
+- Fixed string macros input.
+- Optimize build size. (https://github.com/luckasRanarison/okey/issues/2)
+
 ## v0.1.1 - 30-04-2025
 
 Small fixes, removed unused dependencies and added release actions for building binaries.
