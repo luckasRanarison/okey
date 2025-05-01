@@ -25,6 +25,7 @@ pub enum InputResult {
     Release(KeyCode),
     Macro(Macro),
     DoubleSequence(Box<[InputResult; 2]>),
+    Raw(Vec<InputEvent>),
     Delay(u32),
     None,
 }
@@ -141,6 +142,10 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
                 self.dispatch_event_macro(value)?;
             }
 
+            InputResult::Raw(results) => {
+                self.proxy.emit(results)?;
+            }
+
             InputResult::Delay(timeout) => {
                 thread::sleep(Duration::from_millis(*timeout as u64));
             }
@@ -181,13 +186,13 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
     fn dispatch_shifted_key(&mut self, code: KeyCode, event_kind: i32) -> Result<()> {
         match event_kind {
             PRESS_EVENT => self.proxy.emit(&[
-                KeyCode::shift().to_event(PRESS_EVENT),
-                KeyCode::shift().to_event(HOLD_EVENT),
+                KeyCode::from(evdev::KeyCode::KEY_LEFTSHIFT).to_event(PRESS_EVENT),
+                KeyCode::from(evdev::KeyCode::KEY_LEFTSHIFT).to_event(HOLD_EVENT),
                 code.unshift().to_event(PRESS_EVENT),
             ]),
             HOLD_EVENT => self.proxy.emit(&[code.unshift().to_event(HOLD_EVENT)]),
             RELEASE_EVENT => self.proxy.emit(&[
-                KeyCode::shift().to_event(RELEASE_EVENT),
+                KeyCode::from(evdev::KeyCode::KEY_LEFTSHIFT).to_event(RELEASE_EVENT),
                 code.unshift().to_event(RELEASE_EVENT),
             ]),
             value => unreachable!("Unknown event kind: {value}"),

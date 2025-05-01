@@ -4,6 +4,10 @@ keyboards:
   - name: "My keyboard"
 
     keys:
+      # string macros emit raw character keycode and not remap
+      KEY_Y: KEY_X
+      KEY_U: KEY_I
+
       KEY_F1: [KEY_H, KEY_E, KEY_L, KEY_L, KEY_O] # executes simple key sequences (press + release)
       KEY_F2: { string: "Hi, you!" } # inserts an ASCII string
       KEY_F3: { env: FOO } # inserts the value of the environment variable

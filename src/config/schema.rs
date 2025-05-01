@@ -234,10 +234,6 @@ impl KeyCode {
         self.0.code() > SHIFTED_KEYCODE_START && self.0.code() < SAFE_KEYCODE_START
     }
 
-    pub fn shift() -> Self {
-        KeyCode::new(evdev::KeyCode::KEY_LEFTSHIFT.code())
-    }
-
     pub fn unshift(self) -> Self {
         KeyCode::new(self.0.code() - SHIFTED_KEYCODE_START)
     }
