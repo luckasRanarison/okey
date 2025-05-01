@@ -1,0 +1,129 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/luckasRanarison/okey/refs/heads/master/schema/okey.json
+
+defaults:
+  general:
+    deferred_key_delay: 0
+
+keyboards:
+  - name: "AT Translated Set 2 keyboard"
+
+    keys:
+      KEY_CAPSLOCK: KEY_TAB
+
+    tap_dances:
+      TD_ZERO:
+        tap: KEY_0
+        hold: LAYER_COMP
+
+      KEY_SPACE:
+        tap: KEY_SPACE
+        hold: LAYER_MACRO
+
+    layers:
+      symbols:
+        modifier: KEY_LEFTALT
+
+        keys:
+          KEY_Q: KEY_LEFTBRACE
+          KEY_W: KEY_RIGHTBRACE
+          KEY_E: KEY_LEFTCURLY
+          KEY_R: KEY_RIGHTCURLY
+          KEY_T: KEY_CARET
+          KEY_A: KEY_STAR
+          KEY_S: KEY_BACKSLASH
+          KEY_D: KEY_LEFTPAREN
+          KEY_F: KEY_RIGHTPAREN
+          KEY_G: KEY_PIPE
+          KEY_Z: KEY_EXCLAMATION
+          KEY_X: KEY_TILDE
+          KEY_C: KEY_HASH
+          KEY_V: KEY_PERCENT
+          KEY_B: KEY_AT
+
+          KEY_Y: KEY_PLUS
+          KEY_U: KEY_1
+          KEY_I: KEY_2
+          KEY_O: KEY_3
+          KEY_P: KEY_MINUS
+          KEY_H: KEY_EQUAL
+          KEY_J: KEY_4
+          KEY_K: KEY_5
+          KEY_L: KEY_6
+          KEY_SEMICOLON: KEY_UNDERSCORE
+          KEY_N: KEY_AMPERSAND
+          KEY_M: KEY_7
+          KEY_COMMA: KEY_8
+          KEY_DOT: KEY_9
+          KEY_SLASH: KEY_DOLLARSIGN
+          KEY_APOSTROPHE: KEY_GRAVE
+          KEY_RIGHTALT: TD_ZERO
+
+      composite:
+        modifier: LAYER_COMP
+        keys:
+          KEY_Q: { string: "?." }
+          KEY_W: { string: "//" }
+          KEY_E: { string: "::" }
+          KEY_R: { string: "-=" }
+          KEY_T: { string: "!==" }
+          KEY_A: { string: "&&" }
+          KEY_S: { string: "||" }
+          KEY_D: { string: "??" }
+          KEY_F: { string: "+=" }
+          KEY_G: { string: "!=" }
+
+          KEY_Y: { string: "===" }
+          KEY_U: { string: "<=" }
+          KEY_I: { string: ">=" }
+          KEY_O: { string: "->" }
+          KEY_P: { string: "::<_>()" }
+          KEY_H: { string: "==" }
+          KEY_J: KEY_GREATER
+          KEY_K: KEY_LESS
+          KEY_L: { string: "=>" }
+          KEY_SEMICOLON: { string: "..." }
+          KEY_APOSTROPHE: { string: "```" }
+
+      edit:
+        modifier: KEY_RIGHTALT
+        keys:
+          KEY_H: KEY_LEFT
+          KEY_J: KEY_DOWN
+          KEY_K: KEY_UP
+          KEY_L: KEY_RIGHT
+
+      macro:
+        modifier: LAYER_MACRO
+        keys:
+          KEY_A: [{ string: async }]
+          KEY_E: [{ env: EMAIL }]
+          KEY_N: [{ env: FULL_NAME }]
+          KEY_P: [{ env: PASSWORD }]
+          KEY_H: [{ unicode: 😂 }]
+          KEY_F: [{ string: "() => {\n" }]
+          KEY_C: [{ string: "|| {\n" }]
+
+    combos:
+      - keys: [KEY_A, KEY_S]
+        action: KEY_LEFTMETA
+
+      - keys: [KEY_S, KEY_D]
+        action: KEY_LEFTSHIFT
+
+      - keys: [KEY_D, KEY_F]
+        action: KEY_LEFTCTRL
+
+      - keys: [KEY_S, KEY_F]
+        action: KEY_LEFTALT
+
+      - keys: [KEY_J, KEY_K]
+        action: KEY_RIGHTCTRL
+
+      - keys: [KEY_K, KEY_L]
+        action: KEY_RIGHTSHIFT
+
+      - keys: [KEY_J, KEY_L]
+        action: KEY_RIGHTALT
+
+      - keys: [KEY_L, KEY_SEMICOLON]
+        action: KEY_RIGHTMETA
