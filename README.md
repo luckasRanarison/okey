@@ -14,7 +14,7 @@
 An advanced, easy-to-use key remapper for Linux written in Rust, inspired by [QMK](https://qmk.fm/).
 
 > [!NOTE]
-> This project is currently in its early stages of development. A more comprehensive documentation will be available soon.
+> This project is currently in its early stages of development. More comprehensive documentation will be available soon.
 
 ## Contents
 
@@ -123,7 +123,7 @@ keyboards:
 
 <details>
 
-<summary><b>Tap dance</b>: overload keys by binding different actions when a key is pressed or held down.</summary><br>
+<summary><b>Tap dance</b>: overload keys by binding different actions to a key whether it is tapped or held.</summary><br>
 
 ```yaml
 keyboards:
@@ -187,7 +187,7 @@ keyboards:
 > [!IMPORTANT]
 > The [Rust toolchain](https://rustup.rs/) is required to build the project.
 
-There are currently no packaged binaries for specific distros, but you can download `okey` from the [releases](https://github.com/luckasRanarison/okey/releases) for install it with [cargo](https://doc.rust-lang.org/cargo/):
+There are currently no packaged binaries for specific distros, but you can download `okey` from the [releases](https://github.com/luckasRanarison/okey/releases) or install it with [cargo](https://doc.rust-lang.org/cargo/):
 
 ```bash
 cargo install okey-cli
@@ -202,7 +202,7 @@ cd okey && cargo install --path .
 
 ## Usage
 
-`okey` is designed to be used as a [systemd](https://github.com/systemd/systemd) service. It expects a configuration file at `~/.config/okey/config.yaml` when installed at the user level, or at `/etc/okey/config.yaml` when installed with root priviledges (see the [schema](#configuration-schema)).
+`okey` is designed to be used as a [systemd](https://github.com/systemd/systemd) service. It expects a configuration file at `~/.config/okey/config.yaml` when installed at the user level, or at `/etc/okey/config.yaml` when installed with root privileges (see the [schema](#configuration-schema)).
 
 For simple testing, you can use the `start` command to activate keymaps.
 
@@ -212,7 +212,7 @@ okey start --config ./path/to/config/okey.yaml
 okey start --config ./path/to/config/okey.yaml --daemon # to run as a daemon in the background
 ```
 
-To use `okey` as sysmted a service at the user level, you can use the following commands:
+To use `okey` as systemd a service at the user level, you can use the following commands:
 
 <details>
 
@@ -303,7 +303,7 @@ Shared global settings, fields:
 
   _Default_: `10` (ms)
 
-- `unicode_input_delay`: Delay for inserting unicode codepoints with macro. (flushing)
+- `unicode_input_delay`: Delay for inserting unicode code points with macro. (flushing)
 
   _Type_: `number`
 
