@@ -205,7 +205,9 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
 
         if !self.buffer.has_pending_keys() {
             while let Some(key) = self.buffer.pop_deferred_key() {
-                self.proxy.wait(self.config.deferred_key_delay)?; // add a small delay to make input smoother
+                if self.config.deferred_key_delay > 0 {
+                    self.proxy.wait(self.config.deferred_key_delay)?; // add a small delay to make input smoother
+                }
 
                 let result = InputResult::DoubleSequence(Box::new([
                     InputResult::Press(key),

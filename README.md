@@ -301,7 +301,7 @@ Shared global settings, fields:
 
   _Type_: `number`
 
-  _Default_: `10` (ms)
+  _Default_: `0` (ms)
 
 - `unicode_input_delay`: Delay for inserting unicode code points with macro. (flushing)
 
@@ -329,7 +329,7 @@ Shared global settings, fields:
 
   _Type_: `number`
 
-  _Default_: `50` (ms)
+  _Default_: `10` (ms)
 
 ### `keyboards` (array)
 
