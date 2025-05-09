@@ -188,3 +188,27 @@ fn test_combo_oneshoot_layer() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_reverse_release_momentary_layers() -> Result<()> {
+    let mut proxy = EventProxyMock::default();
+    let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
+
+    adapter.process(
+        InputBuffer::new(KeyCode::KEY_SPACE)
+            .press()
+            .hold_then(KeyCode::KEY_P)
+            .tap_then(KeyCode::KEY_V)
+            .release_then(KeyCode::KEY_SPACE)
+            .release_then(KeyCode::KEY_P)
+            .tap(),
+    )?;
+
+    let expected = InputBuffer::new(KeyCode::KEY_Q)
+        .tap_then(KeyCode::KEY_P)
+        .tap();
+
+    assert_eq!(proxy.queue(), expected.value());
+
+    Ok(())
+}
