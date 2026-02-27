@@ -23,15 +23,14 @@ fn test_shifted_key_event() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    adapter.process(InputBuffer::press(KeyCode::KEY_Q).hold().release())?;
+    adapter.process_sequence([InputSequence::TapHold(KeyCode::KEY_Q)])?;
 
-    let expected = InputBuffer::new(KeyCode::KEY_LEFTSHIFT)
-        .press()
-        .hold_then(KeyCode::KEY_1)
-        .press()
-        .hold_then(KeyCode::KEY_LEFTSHIFT)
-        .release_then(KeyCode::KEY_1)
-        .release();
+    let expected = InputBuffer::new([
+        InputSequence::Hold(KeyCode::KEY_LEFTSHIFT),
+        InputSequence::Hold(KeyCode::KEY_1),
+        InputSequence::Release(KeyCode::KEY_1),
+        InputSequence::Release(KeyCode::KEY_LEFTSHIFT),
+    ]);
 
     assert_eq!(proxy.queue(), expected.value());
 

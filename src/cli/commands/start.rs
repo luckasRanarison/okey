@@ -37,7 +37,7 @@ pub fn start(config_path: Option<String>) -> Result<()> {
 pub fn start_daemon(config_path: Option<String>) -> Result<()> {
     match unsafe { unistd::fork() } {
         Ok(ForkResult::Parent { child, .. }) => {
-            println!("okey daemon started in the background... (PID: {})", child);
+            println!("okey daemon started in the background... (PID: {child})");
             process::exit(0);
         }
         Ok(ForkResult::Child) => {

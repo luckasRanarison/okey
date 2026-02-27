@@ -7,14 +7,15 @@ fn test_macro_key() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    let expected = InputBuffer::new(KeyCode::KEY_H)
-        .tap_then(KeyCode::KEY_E)
-        .tap_then(KeyCode::KEY_L)
-        .tap()
-        .tap_then(KeyCode::KEY_O)
-        .tap();
+    let expected = InputBuffer::new([
+        InputSequence::Tap(KeyCode::KEY_H),
+        InputSequence::Tap(KeyCode::KEY_E),
+        InputSequence::Tap(KeyCode::KEY_L),
+        InputSequence::Tap(KeyCode::KEY_L),
+        InputSequence::Tap(KeyCode::KEY_O),
+    ]);
 
-    adapter.process(InputBuffer::tap(KeyCode::KEY_Q))?;
+    adapter.process_sequence([InputSequence::Tap(KeyCode::KEY_Q)])?;
 
     assert_eq!(proxy.queue(), expected.value());
 
@@ -26,14 +27,15 @@ fn test_macro_hold() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    let expected = InputBuffer::new(KeyCode::KEY_H)
-        .tap_then(KeyCode::KEY_E)
-        .tap_then(KeyCode::KEY_L)
-        .tap()
-        .tap_then(KeyCode::KEY_O)
-        .tap();
+    let expected = InputBuffer::new([
+        InputSequence::Tap(KeyCode::KEY_H),
+        InputSequence::Tap(KeyCode::KEY_E),
+        InputSequence::Tap(KeyCode::KEY_L),
+        InputSequence::Tap(KeyCode::KEY_L),
+        InputSequence::Tap(KeyCode::KEY_O),
+    ]);
 
-    adapter.process(InputBuffer::tap_hold(KeyCode::KEY_Q))?;
+    adapter.process_sequence([InputSequence::TapHold(KeyCode::KEY_Q)])?;
 
     // macros should not repeat on hold
     assert_eq!(proxy.queue(), expected.value());
@@ -46,12 +48,12 @@ fn test_event_macro() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    adapter.process(InputBuffer::tap(KeyCode::KEY_X))?;
+    adapter.process_sequence([InputSequence::Tap(KeyCode::KEY_X)])?;
 
-    let expected = InputBuffer::new(KeyCode::KEY_O)
-        .shifted()
-        .then(KeyCode::KEY_K)
-        .tap();
+    let expected = InputBuffer::new([
+        InputSequence::Shifted(KeyCode::KEY_O),
+        InputSequence::Tap(KeyCode::KEY_K),
+    ]);
 
     assert_eq!(proxy.queue(), expected.value());
 
@@ -63,18 +65,18 @@ fn test_string_macro() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    adapter.process(InputBuffer::tap(KeyCode::KEY_R))?;
+    adapter.process_sequence([InputSequence::Tap(KeyCode::KEY_R)])?;
 
-    let expected = InputBuffer::new(KeyCode::KEY_H)
-        .shifted()
-        .then(KeyCode::KEY_I)
-        .tap_then(KeyCode::KEY_COMMA)
-        .tap_then(KeyCode::KEY_SPACE)
-        .tap_then(KeyCode::KEY_Y)
-        .tap_then(KeyCode::KEY_O)
-        .tap_then(KeyCode::KEY_U)
-        .tap_then(KeyCode::KEY_1)
-        .shifted();
+    let expected = InputBuffer::new([
+        InputSequence::Shifted(KeyCode::KEY_H),
+        InputSequence::Tap(KeyCode::KEY_I),
+        InputSequence::Tap(KeyCode::KEY_COMMA),
+        InputSequence::Tap(KeyCode::KEY_SPACE),
+        InputSequence::Tap(KeyCode::KEY_Y),
+        InputSequence::Tap(KeyCode::KEY_O),
+        InputSequence::Tap(KeyCode::KEY_U),
+        InputSequence::Shifted(KeyCode::KEY_1),
+    ]);
 
     assert_eq!(proxy.queue(), expected.value());
 
@@ -88,12 +90,13 @@ fn test_env_macro() -> Result<()> {
 
     unsafe { std::env::set_var("FOO", "foo") };
 
-    adapter.process(InputBuffer::tap(KeyCode::KEY_W))?;
+    adapter.process_sequence([InputSequence::Tap(KeyCode::KEY_W)])?;
 
-    let expected = InputBuffer::new(KeyCode::KEY_F)
-        .tap_then(KeyCode::KEY_O)
-        .tap()
-        .tap();
+    let expected = InputBuffer::new([
+        InputSequence::Tap(KeyCode::KEY_F),
+        InputSequence::Tap(KeyCode::KEY_O),
+        InputSequence::Tap(KeyCode::KEY_O),
+    ]);
 
     assert_eq!(proxy.queue(), expected.value());
 
@@ -105,24 +108,24 @@ fn test_unicode_macro() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    adapter.process(InputBuffer::tap(KeyCode::KEY_T))?;
+    adapter.process_sequence([InputSequence::Tap(KeyCode::KEY_T)])?;
 
-    let expected = unicode()
-        .then(KeyCode::KEY_1)
-        .tap_then(KeyCode::KEY_F)
-        .tap_then(KeyCode::KEY_6)
-        .tap_then(KeyCode::KEY_4)
-        .tap_then(KeyCode::KEY_2)
-        .tap_then(KeyCode::KEY_ENTER)
-        .tap()
-        .chain(unicode())
-        .then(KeyCode::KEY_1)
-        .tap_then(KeyCode::KEY_F)
-        .tap_then(KeyCode::KEY_4)
-        .tap_then(KeyCode::KEY_4)
-        .tap_then(KeyCode::KEY_D)
-        .tap_then(KeyCode::KEY_ENTER)
-        .tap();
+    let expected = InputBuffer::new([
+        InputSequence::Unicode,
+        InputSequence::Tap(KeyCode::KEY_1),
+        InputSequence::Tap(KeyCode::KEY_F),
+        InputSequence::Tap(KeyCode::KEY_6),
+        InputSequence::Tap(KeyCode::KEY_4),
+        InputSequence::Tap(KeyCode::KEY_2),
+        InputSequence::Tap(KeyCode::KEY_ENTER),
+        InputSequence::Unicode,
+        InputSequence::Tap(KeyCode::KEY_1),
+        InputSequence::Tap(KeyCode::KEY_F),
+        InputSequence::Tap(KeyCode::KEY_4),
+        InputSequence::Tap(KeyCode::KEY_4),
+        InputSequence::Tap(KeyCode::KEY_D),
+        InputSequence::Tap(KeyCode::KEY_ENTER),
+    ]);
 
     assert_eq!(proxy.queue(), expected.value());
 
@@ -134,12 +137,13 @@ fn test_shell_macro() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    adapter.process(InputBuffer::tap(KeyCode::KEY_Z))?;
+    adapter.process_sequence([InputSequence::Tap(KeyCode::KEY_Z)])?;
 
-    let expected = InputBuffer::new(KeyCode::KEY_F)
-        .tap_then(KeyCode::KEY_O)
-        .tap()
-        .tap();
+    let expected = InputBuffer::new([
+        InputSequence::Tap(KeyCode::KEY_F),
+        InputSequence::Tap(KeyCode::KEY_O),
+        InputSequence::Tap(KeyCode::KEY_O),
+    ]);
 
     assert_eq!(proxy.queue(), expected.value());
 

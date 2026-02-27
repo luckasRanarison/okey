@@ -192,8 +192,8 @@ impl<'a, P: EventProxy> KeyAdapter<'a, P> {
             ]),
             HOLD_EVENT => self.proxy.emit(&[code.unshift().to_event(HOLD_EVENT)]),
             RELEASE_EVENT => self.proxy.emit(&[
-                KeyCode::from(evdev::KeyCode::KEY_LEFTSHIFT).to_event(RELEASE_EVENT),
                 code.unshift().to_event(RELEASE_EVENT),
+                KeyCode::from(evdev::KeyCode::KEY_LEFTSHIFT).to_event(RELEASE_EVENT),
             ]),
             value => unreachable!("Unknown event kind: {value}"),
         }

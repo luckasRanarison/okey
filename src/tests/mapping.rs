@@ -7,9 +7,11 @@ fn test_basic_key() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    adapter.process(InputBuffer::tap_hold(KeyCode::KEY_Q))?;
+    adapter.process_sequence([InputSequence::TapHold(KeyCode::KEY_Q)])?;
 
-    let expected = InputBuffer::tap_hold(KeyCode::KEY_W);
+    let expected = InputBuffer::new(
+        [InputSequence::TapHold(KeyCode::KEY_W)], //
+    );
 
     assert_eq!(proxy.queue(), expected.value());
 
@@ -21,9 +23,11 @@ fn test_custom_code() -> Result<()> {
     let mut proxy = EventProxyMock::default();
     let mut adapter = KeyAdapter::with_config(CONFIG, &mut proxy);
 
-    adapter.process(InputBuffer::tap(KeyCode::KEY_Z))?;
+    adapter.process_sequence([InputSequence::Tap(KeyCode::KEY_Z)])?;
 
-    let expected = InputBuffer::tap(KeyCode::KEY_A);
+    let expected = InputBuffer::new(
+        [InputSequence::Tap(KeyCode::KEY_A)], //
+    );
 
     assert_eq!(proxy.queue(), expected.value());
 
